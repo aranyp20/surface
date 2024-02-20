@@ -5,9 +5,14 @@
 #include <cmath>
 
 
+struct SurfaceParam
+{
+    double u = 0;
+    double v = 0;
+};
 
 
-std::vector<Eigen::Vector3d> translatePoints(std::vector<Eigen::Vector3d>& cps)
+void translatePoints(std::vector<Eigen::Vector3d>& cps)
 {
     const auto t0_origo = cps[0];
     for (auto& cp : cps)
@@ -16,6 +21,13 @@ std::vector<Eigen::Vector3d> translatePoints(std::vector<Eigen::Vector3d>& cps)
     }
 }
 
+std::vector<SurfaceParam> calcUVs(const std::vector<Eigen::Vector3d>& cps)
+{
+    std::vector<SurfaceParam> retval;
+
+
+    return retval;
+}
 
 
 
@@ -38,9 +50,18 @@ int main()
 
     glfwMakeContextCurrent(window);
 
-    std::vector<Eigen::Vector3d> cps; //first element is the center point
+    std::vector<Eigen::Vector3d> cps //first element is the center point
+    {
+        {3,0,0},
+        {4,2,1},
+        {5,1,-1},
+        {3.5,-2,-2},
+        {6,-1, -4}
+    };
+
     translatePoints(cps);
 
+    const auto surface_params = calcUVs(cps);
 
 
     while (!glfwWindowShouldClose(window))
