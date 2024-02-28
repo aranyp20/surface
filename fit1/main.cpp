@@ -43,7 +43,7 @@ std::vector<SurfaceParam> calcUVs(const InputPoints &cps)
 {
     std::vector<SurfaceParam> retval;
 
-    retval.push_back({0, 0});
+    //retval.push_back({0, 0});
 
     std::vector<double> alphas;
     double alpha_sum = 0;
@@ -98,18 +98,11 @@ DerResults calcDer(const InputPoints &ipp, const std::vector<SurfaceParam> &uvs)
         A(i, 3) = uv.u * uv.v;
         A(i, 4) = 0.5 * uv.v * uv.v;
 
-        if (i == 0)
-        {
-            c_x(i) = ipp.center[0];
-            c_y(i) = ipp.center[1];
-            c_z(i) = ipp.center[2];
-        }
-        else
-        {
-            c_x(i) = ipp.P[i - 1][0];
-            c_y(i) = ipp.P[i - 1][1];
-            c_z(i) = ipp.P[i - 1][2];
-        }
+
+        c_x(i) = ipp.P[i][0];
+        c_y(i) = ipp.P[i][1];
+        c_z(i) = ipp.P[i][2];
+        
     }
 
     Eigen::VectorXd b_x = Eigen::VectorXd::Random(res_size);
@@ -133,7 +126,7 @@ Eigen::Vector3d S(const double u, const double v, const DerResults &Ss)
 std::vector<Triangle3d> tessellateSurface(const size_t resolution, const DerResults &Ss)
 {
 
-#define uvBOUND 10
+#define uvBOUND 20
 
     const double u_min = -uvBOUND;
     const double u_max = uvBOUND;
@@ -158,39 +151,25 @@ std::vector<Triangle3d> tessellateSurface(const size_t resolution, const DerResu
 
     // TODO refactor
 
-#define PRINT_CPS 1
 
-#ifndef PRINT_CPS
     std::fstream fw("res1.obj", std::ios::out);
-#else
-    std::fstream fw("res2.obj", std::ios::out);
-#endif
+
+
 
     fw << "# Vertices\n";
 
-#ifndef PRINT_CPS
+
     for (const auto &vertex : values)
     {
         fw << "v " << vertex[0] << " " << vertex[1] << " " << vertex[2] << std::endl;
     }
-#endif
 
-#ifdef PRINT_CPS
-    fw << "v 2 4 2" << std::endl;
-    fw << "v -1 4 -3" << std::endl;
-    fw << "v 2 -1 -4" << std::endl;
-    fw << "v -2 -4 10" << std::endl;
-    fw << "v 0 0 0" << std::endl;
 
-    fw << "f 1 2 3" << std::endl;
-    fw << "f 1 3 4" << std::endl;
-    fw << "f 1 3 5" << std::endl;
 
-#endif
 
     fw << "\n# Faces\n";
 
-#ifndef PRINT_CPS
+
     for (size_t i = 0; i < (resolution - 1) * (resolution - 1); i++)
     {
         const size_t left_right_index = std::floor(i / (resolution - 1)) + i;
@@ -200,7 +179,7 @@ std::vector<Triangle3d> tessellateSurface(const size_t resolution, const DerResu
         fw << "f " << left_right_index + 1 << " " << left_right_index + resolution + 1 << " " << left_right_index + resolution + 2 << std::endl;
         fw << "f " << left_right_index + 1 << " " << left_right_index + resolution + 2 << " " << left_right_index + 2 << std::endl;
     }
-#endif
+
 
     return retval;
 }
@@ -225,13 +204,28 @@ int main()
 
     InputPoints ip;
 
-    ip.center = {3, 0, 0};
+    ip.center = {4, 0, 0};
+    
+    /*
     ip.P =
         {
             {5, 4, 2},
             {2, 4, -3},
             {5, -1, -4},
-            {1, -4, 10}};
+            {1, -4, 10},
+            {3,3,3},
+            {-4,1,-2}};
+    */
+
+   ip.P = {
+    {4,5,6},
+    {4,9,-1},
+    {4,1,1},
+    {4,3,-2},
+    //{10, 2,5},
+    {4,-2,-1},
+    //{4,6,-1}
+   };
 
     ip.translatePoints();
 
@@ -239,7 +233,7 @@ int main()
 
     const auto eq_params = calcDer(ip, surface_params);
 
-    const auto triangles = tessellateSurface(10, eq_params);
+    const auto triangles = tessellateSurface(100, eq_params);
 
     std::cout << eq_params.Su << "\n"
               << eq_params.Sv << "\n"
