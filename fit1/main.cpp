@@ -85,9 +85,7 @@ DerResults calcDer(const InputPoints &ipp, const std::vector<SurfaceParam> &uvs)
 {
     const auto res_size = 5;
     Eigen::MatrixXd A = Eigen::MatrixXd::Random(uvs.size(), res_size);
-    Eigen::VectorXd c_x = Eigen::VectorXd::Random(uvs.size());
-    Eigen::VectorXd c_y = Eigen::VectorXd::Random(uvs.size());
-    Eigen::VectorXd c_z = Eigen::VectorXd::Random(uvs.size());
+    Eigen::MatrixXd c = Eigen::MatrixXd::Random(uvs.size(), 3);
 
     for (int i = 0; i < uvs.size(); i++)
     {
@@ -99,21 +97,29 @@ DerResults calcDer(const InputPoints &ipp, const std::vector<SurfaceParam> &uvs)
         A(i, 4) = 0.5 * uv.v * uv.v;
 
 
-        c_x(i) = ipp.P[i][0];
-        c_y(i) = ipp.P[i][1];
-        c_z(i) = ipp.P[i][2];
+        c(i, 0) = ipp.P[i][0];
+        c(i, 1) = ipp.P[i][1];
+        c(i, 2) = ipp.P[i][2];
         
     }
 
-    Eigen::VectorXd b_x = Eigen::VectorXd::Random(res_size);
-    Eigen::VectorXd b_y = Eigen::VectorXd::Random(res_size);
-    Eigen::VectorXd b_z = Eigen::VectorXd::Random(res_size);
+    Eigen::MatrixXd b = Eigen::MatrixXd::Random(res_size, 3);
 
-    b_x = A.colPivHouseholderQr().solve(c_x);
-    b_y = A.colPivHouseholderQr().solve(c_y);
-    b_z = A.colPivHouseholderQr().solve(c_z);
+    if (uvs.size() >= 5)
+    {
+        //Eigen uses the least squares method for overdetermined systems by default
 
-    return {{b_x[0], b_y[0], b_z[0]}, {b_x[1], b_y[1], b_z[1]}, {b_x[2], b_y[2], b_z[2]}, {b_x[3], b_y[3], b_z[3]}, {b_x[4], b_y[4], b_z[4]}};
+        b = A.colPivHouseholderQr().solve(c);
+    }
+    else {
+
+        //Min norm methods
+
+        b = A.transpose() * (A * A.transpose()).inverse() * c;
+    }
+
+
+    return {b.row(0), b.row(1), b.row(2), b.row(3), b.row(4)};
 }
 
 Eigen::Vector3d S(const double u, const double v, const DerResults &Ss)
@@ -218,11 +224,11 @@ int main()
     */
 
    ip.P = {
-    {4,5,6},
-    {4,9,-1},
+    //{4,5,6},
+    //{4,9,-1},
     {4,1,1},
     {4,3,-2},
-    //{10, 2,5},
+    {10, 2,5},
     {4,-2,-1},
     //{4,6,-1}
    };
