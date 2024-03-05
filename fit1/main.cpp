@@ -5,6 +5,9 @@
 #include <cmath>
 #include <fstream>
 
+#include <OpenMesh/Core/IO/MeshIO.hh>
+#include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
+
 struct DerResults
 {
     Eigen::Vector3d Su{0, 0, 0};
@@ -190,6 +193,79 @@ std::vector<Triangle3d> tessellateSurface(const size_t resolution, const DerResu
     return retval;
 }
 
+
+double calcCurvature(const InputPoints& ipp)
+{
+    auto ip = ipp;
+
+    ip.translatePoints();
+
+    const auto surface_params = calcUVs(ip);
+
+    const auto eq = calcDer(ip, surface_params);
+
+
+    const auto E = eq.Su.norm() * eq.Su.norm();
+    const auto G = eq.Sv.norm() * eq.Sv.norm();
+    const auto F = eq.Su.dot(eq.Sv);
+
+    const auto n = eq.Su.cross(eq.Sv).normalized();
+    const auto L = eq.Suu.dot(n);
+    const auto M = eq.Suv.dot(n);
+    const auto N = eq.Svv.dot(n);
+
+    return (L * G - M * F + N * E - M * F) / (2 * E * G - F * F);
+
+}
+
+void calcCurvatures()
+{
+
+
+    typedef OpenMesh::TriMesh_ArrayKernelT<>  MyMesh;
+
+    MyMesh mesh;
+
+    
+    if (!OpenMesh::IO::read_mesh(mesh, "input1.obj")) {
+        std::cout << "Error: Cannot read mesh from file." << std::endl;
+    }
+
+    
+    OpenMesh::VPropHandleT<double> doubleValues;
+    mesh.add_property(doubleValues);
+
+
+    for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it) {
+        MyMesh::VertexHandle vh = *v_it;
+
+        MyMesh::Point vertexPos = mesh.point(vh); //TODO ref?
+
+        
+        InputPoints cip;
+        cip.center = Eigen::Vector3d(vertexPos[0], vertexPos[1], vertexPos[2]);
+        for (MyMesh::VertexOHalfedgeIter voh_it = mesh.voh_iter(vh); voh_it.is_valid(); ++voh_it) {
+            MyMesh::VertexHandle neighborVh = mesh.to_vertex_handle(*voh_it);
+
+            const auto neighborPos = mesh.point(neighborVh); //TODO ref?
+            cip.P.emplace_back(neighborPos[0], neighborPos[1], neighborPos[2]);
+        }
+
+
+        mesh.property(doubleValues, vh) = calcCurvature(cip);
+    }
+
+    // Now, you can access the double values for each vertex using the property
+    for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it) {
+        MyMesh::VertexHandle vh = *v_it;
+        double doubleValue = mesh.property(doubleValues, vh);
+        // Do something with the calculated double value
+        std::cout << "Vertex " << vh.idx() << ": Double Value = " << doubleValue << std::endl;
+    }
+}
+
+
+
 int main()
 {
 
@@ -233,19 +309,15 @@ int main()
     //{4,6,-1}
    };
 
-    ip.translatePoints();
+    calcCurvatures();
 
-    const auto surface_params = calcUVs(ip);
-
-    const auto eq_params = calcDer(ip, surface_params);
-
-    const auto triangles = tessellateSurface(100, eq_params);
-
+/*
     std::cout << eq_params.Su << "\n"
               << eq_params.Sv << "\n"
               << eq_params.Suu << "\n"
               << eq_params.Suv << "\n"
               << eq_params.Svv << std::endl;
+*/
 
     // for(auto a : surface_params){
     //     std::cout<<a.u<<" "<<a.v<<std::endl;
