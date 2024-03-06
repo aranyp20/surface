@@ -5,6 +5,8 @@
 #include <cmath>
 #include <fstream>
 
+#include "canvas.h"
+
 #include <OpenMesh/Core/IO/MeshIO.hh>
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 
@@ -268,6 +270,7 @@ void calcCurvatures()
 
 int main()
 {
+    Canvas canvas;
 
     if (!glfwInit())
     {
