@@ -1,4 +1,5 @@
 {
+    "editor.mouseWheelScrollSensitivity": 4,
     "files.associations": {
         "cmath": "cpp",
         "iosfwd": "cpp",
