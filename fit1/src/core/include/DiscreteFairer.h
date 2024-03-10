@@ -1,6 +1,0 @@
-#ifndef DISCRETEFAIRER_H_
-#define DISCRETEFAIRER_H_
-
-
-
-#endif // DISCRETEFAIRER_H_
