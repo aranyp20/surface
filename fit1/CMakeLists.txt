@@ -52,9 +52,10 @@ src/core/src/discretefairer.cpp
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 ${CMAKE_CURRENT_SOURCE_DIR}/src/visualization/qt/
-${CMAKE_CURRENT_SOURCE_DIR}/src/visualization/include/
+${CMAKE_CURRENT_SOURCE_DIR}/src/
 ${CMAKE_CURRENT_SOURCE_DIR}/src/core/include/
 ${CMAKE_CURRENT_SOURCE_DIR}/src/common/include/
+${CMAKE_CURRENT_SOURCE_DIR}/src/visualization/include/
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL Qt5::Widgets glfw ${OPENMESH_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL Qt5::Widgets ${OPENMESH_LIBRARIES})

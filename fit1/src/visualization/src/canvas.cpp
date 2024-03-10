@@ -2,7 +2,7 @@
 
 
 
-/*
+
 
 Canvas::Canvas(QWidget *parent) : QOpenGLWidget(parent)
 {}
@@ -27,5 +27,14 @@ void Canvas::resizeGL(int w, int h)
 {
 }
 
+void Canvas::mousePressEvent(QMouseEvent *event)
+{
 
-*/
+}
+
+void Canvas::mouseMoveEvent(QMouseEvent *event)
+{
+
+}
+
+

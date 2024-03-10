@@ -6,8 +6,7 @@
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLBuffer>
 #include <QMouseEvent>
-#include <qobjectdefs.h>
-#include <qopenglwidget.h>
+
 
 #include <iostream>
 
@@ -29,24 +28,23 @@ class Canvas : public QOpenGLWidget
 
 public:
 
-  Canvas(QWidget *parent) : QOpenGLWidget(parent){
+  Canvas(QWidget *parent);
 
-  }
-
-  ~Canvas(){}
+  ~Canvas();
 
 
-//protected:
+protected:
 
-  void initializeGL()override {};
+  void initializeGL()override;
 
-  void resizeGL(int w, int h)override{};
+  void resizeGL(int w, int h)override;
 
-  void paintGL()override{};
+  void paintGL()override;
 
-  void mousePressEvent(QMouseEvent *event)override{};
+  void mousePressEvent(QMouseEvent *event)override;
 
-void mouseMoveEvent(QMouseEvent *event)override{};
+  void mouseMoveEvent(QMouseEvent *event)override;
+
 
 };
 
