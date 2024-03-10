@@ -8,13 +8,12 @@
 #include <OpenMesh/Core/IO/MeshIO.hh>
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 
+#include "common_defines.h"
+
 namespace core
 {
     class DiscreteFairer
     {
-    public:
-        typedef OpenMesh::TriMesh_ArrayKernelT<> MyMesh;
-    private:
 
         struct SurfaceParam
         {
@@ -44,11 +43,11 @@ namespace core
         DerResults calcDer(const InputPoints &ipp) const;
         Eigen::Vector3d S(const double u, const double v, const DerResults &Ss) const;
         double calcCurvature(const InputPoints &ipp) const;
-        void calcCurvatures(MyMesh &mesh) const;
+        void calcCurvatures(common::MyMesh &mesh) const;
 
     public:
 
-        void execute(MyMesh &mesh);
+        void execute(common::MyMesh &mesh);
     };
 
 }

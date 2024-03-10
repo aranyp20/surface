@@ -18,6 +18,7 @@ src/core/src/discretefairer.cpp
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 ${CMAKE_CURRENT_SOURCE_DIR}/src/visualization/include/
-${CMAKE_CURRENT_SOURCE_DIR}/src/core/include/)
+${CMAKE_CURRENT_SOURCE_DIR}/src/core/include/
+${CMAKE_CURRENT_SOURCE_DIR}/src/common/include/)
 
 target_link_libraries(a_fit1 PRIVATE OpenGL::GL glfw ${OPENMESH_LIBRARIES})

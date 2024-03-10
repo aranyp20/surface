@@ -124,24 +124,24 @@ namespace core
         return (L * G - M * F + N * E - M * F) / (2 * E * G - F * F);
     }
 
-    void DiscreteFairer::calcCurvatures(MyMesh &mesh) const
+    void DiscreteFairer::calcCurvatures(common::MyMesh &mesh) const
     {
 
 
         OpenMesh::VPropHandleT<double> doubleValues;
         mesh.add_property(doubleValues);
 
-        for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
+        for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
         {
-            MyMesh::VertexHandle vh = *v_it;
+            common::MyMesh::VertexHandle vh = *v_it;
 
-            MyMesh::Point vertexPos = mesh.point(vh); // TODO ref?
+            common::MyMesh::Point vertexPos = mesh.point(vh); // TODO ref?
 
             InputPoints cip;
             cip.center = Eigen::Vector3d(vertexPos[0], vertexPos[1], vertexPos[2]);
-            for (MyMesh::VertexOHalfedgeIter voh_it = mesh.voh_iter(vh); voh_it.is_valid(); ++voh_it)
+            for (common::MyMesh::VertexOHalfedgeIter voh_it = mesh.voh_iter(vh); voh_it.is_valid(); ++voh_it)
             {
-                MyMesh::VertexHandle neighborVh = mesh.to_vertex_handle(*voh_it);
+                common::MyMesh::VertexHandle neighborVh = mesh.to_vertex_handle(*voh_it);
 
                 const auto neighborPos = mesh.point(neighborVh); // TODO ref?
                 cip.P.emplace_back(neighborPos[0], neighborPos[1], neighborPos[2]);
@@ -150,15 +150,15 @@ namespace core
             mesh.property(doubleValues, vh) = calcCurvature(cip);
         }
 
-        for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
+        for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
         {
-            MyMesh::VertexHandle vh = *v_it;
+            common::MyMesh::VertexHandle vh = *v_it;
             double doubleValue = mesh.property(doubleValues, vh);
             std::cout << "Vertex " << vh.idx() << ": Double Value = " << doubleValue << std::endl;
         }
     }
 
-    void DiscreteFairer::execute(MyMesh &mesh)
+    void DiscreteFairer::execute(common::MyMesh &mesh)
     {
         calcCurvatures(mesh);
     }

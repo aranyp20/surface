@@ -5,9 +5,9 @@
 
 int main()
 {
-    Canvas canvas;
+    gui::Canvas canvas;
 
-    core::DiscreteFairer::MyMesh mesh;
+    common::MyMesh mesh;
 
     if (!OpenMesh::IO::read_mesh(mesh, "input1.obj"))
     {
