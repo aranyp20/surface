@@ -1,19 +1,19 @@
+#include <OpenMesh/Core/Mesh/FinalMeshItemsT.hh>
 #include <QApplication>
 #include <QStyleFactory>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <GLFW/glfw3.h>
 
-#include "canvas.h"
 #include "discretefairer.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
- 
- 
+
+
+
         // Set the Fusion style as the default
     QApplication::setStyle(QStyleFactory::create("Fusion"));
 
@@ -41,12 +41,10 @@ int main(int argc, char *argv[])
 
     w.show();
 
-    return a.exec();
-
-    gui::Canvas canvas;
 
     common::MyMesh mesh;
 
+    return a.exec();
 
     if (!OpenMesh::IO::read_mesh(mesh, "input1.obj"))
     {
@@ -56,33 +54,4 @@ int main(int argc, char *argv[])
     core::DiscreteFairer df;
     df.execute(mesh);
 
-    if (!glfwInit())
-    {
-        return -1;
-    }
-
-    GLFWwindow *window = glfwCreateWindow(1500, 1000, "fit1 app", nullptr, nullptr);
-
-    if (!window)
-    {
-        glfwTerminate();
-        return -1;
-    }
-
-    glfwMakeContextCurrent(window);
-
-    while (!glfwWindowShouldClose(window))
-    {
-
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        glfwSwapBuffers(window);
-
-        glfwPollEvents();
-    }
-
-    glfwDestroyWindow(window);
-    glfwTerminate();
-
-    return 0;
 }

@@ -154,7 +154,7 @@ namespace core
         {
             common::MyMesh::VertexHandle vh = *v_it;
             double doubleValue = mesh.property(doubleValues, vh);
-            std::cout << "Vertex " << vh.idx() << ": Double Value = " << doubleValue << std::endl;
+            //std::cout << "Vertex " << vh.idx() << ": Double Value = " << doubleValue << std::endl;
         }
     }
 

@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QOpenGLWidget" name="main_openGL_widget">
+   <widget class="Canvas" name="main_openGL_widget">
     <property name="geometry">
      <rect>
       <x>160</x>
@@ -50,6 +50,13 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Canvas</class>
+   <extends>QOpenGLWidget</extends>
+   <header>canvas.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
