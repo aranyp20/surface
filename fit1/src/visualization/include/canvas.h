@@ -30,7 +30,7 @@ public:
 
   Canvas(QWidget *parent);
 
-  ~Canvas();
+  virtual ~Canvas();
 
 
 protected:

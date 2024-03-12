@@ -17,6 +17,9 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 
+
+
+
 find_package(OpenGL REQUIRED)
 
 
@@ -46,6 +49,7 @@ src/visualization/qt/main.cpp
 src/visualization/qt/mainwindow.cpp
 src/visualization/qt/mainwindow.ui
 src/visualization/src/canvas.cpp
+src/visualization/include/canvas.h
 ${UI_HEADERS}    
 src/core/src/discretefairer.cpp
 )
