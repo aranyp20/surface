@@ -85,14 +85,12 @@ namespace core
         if (uvs.size() >= 5)
         {
             // Eigen uses the least squares method for overdetermined systems by default
-
             b = A.colPivHouseholderQr().solve(c);
         }
         else
         {
 
             // Min norm methods
-
             b = A.transpose() * (A * A.transpose()).inverse() * c;
         }
 

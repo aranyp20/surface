@@ -11,6 +11,7 @@
 #include <iostream>
 
 #include "common_defines.h"
+#include "camera.h"
 
 
 
@@ -26,12 +27,21 @@ class Canvas : public QOpenGLWidget
   QOpenGLShaderProgram *sp;
 
 
+  Camera camera;
+
+  struct qGlVertex
+  {
+    QVector3D position;
+    QVector3D color;
+  };
+
 public:
 
   Canvas(QWidget *parent);
 
   virtual ~Canvas();
 
+  void setPrintable(const common::MyMesh* const _printable_mesh);
 
 protected:
 
@@ -45,6 +55,11 @@ protected:
 
   void mouseMoveEvent(QMouseEvent *event)override;
 
+private:
+
+  const common::MyMesh* printable_mesh = nullptr;
+
+  std::vector<qGlVertex> printableMeshToTriangles() const;
 
 };
 

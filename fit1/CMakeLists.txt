@@ -49,6 +49,7 @@ src/visualization/qt/main.cpp
 src/visualization/qt/mainwindow.cpp
 src/visualization/qt/mainwindow.ui
 src/visualization/src/canvas.cpp
+src/visualization/src/camera.cpp
 src/visualization/include/canvas.h
 ${UI_HEADERS}    
 src/core/src/discretefairer.cpp

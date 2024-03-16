@@ -42,16 +42,8 @@ int main(int argc, char *argv[])
     w.show();
 
 
-    common::MyMesh mesh;
+    //core::DiscreteFairer df;
+    //df.execute(mesh);
 
     return a.exec();
-
-    if (!OpenMesh::IO::read_mesh(mesh, "input1.obj"))
-    {
-        std::cout << "Error: Cannot read mesh from file." << std::endl;
-    }
-
-    core::DiscreteFairer df;
-    df.execute(mesh);
-
 }
