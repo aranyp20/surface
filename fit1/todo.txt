@@ -2,12 +2,12 @@ TODO:
 
 
 
-
+-fix yaw-pitch-roll
 
 BUGS:
 
 -curvature gives NaNs (check)
--align model to real yaw-pitch-roll
+
 
 
 SOLVED:
