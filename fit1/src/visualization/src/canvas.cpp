@@ -24,7 +24,7 @@ Canvas::Canvas(QWidget *parent) : QOpenGLWidget(parent)
 Canvas::~Canvas()
 {}
 
-//TODO this should go to somewhere else and be optimized
+//TODO Fix it, its not yaw-pitch-roll
 Eigen::Matrix4d Canvas::modelRotMatrix() const
 {
 
