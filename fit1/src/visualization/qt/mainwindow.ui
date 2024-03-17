@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>843</width>
-    <height>600</height>
+    <width>1130</width>
+    <height>811</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,10 +17,10 @@
    <widget class="Canvas" name="main_openGL_widget">
     <property name="geometry">
      <rect>
-      <x>160</x>
-      <y>20</y>
-      <width>500</width>
-      <height>500</height>
+      <x>370</x>
+      <y>10</y>
+      <width>741</width>
+      <height>741</height>
      </rect>
     </property>
    </widget>
@@ -147,7 +147,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>843</width>
+     <width>1130</width>
      <height>22</height>
     </rect>
    </property>

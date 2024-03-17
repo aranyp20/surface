@@ -134,7 +134,7 @@ std::vector<Canvas::qGlVertex> Canvas::printableMeshToTriangles() const
           }
           
           const auto curvature = printable_mesh->property(myprop, vh);
-          const auto rgb_curvature = common::color::hsvToRgb({curvature/600 + 0.5, 0.8, 0.8});
+          const auto rgb_curvature = common::color::hsvToRgb({curvature/600 + 0.5, 1.0, 1.0});
 
           retval.push_back({{vertex_position[0] * 10, vertex_position[1] * 10 - 0.8, vertex_position[2] * 10}, {rgb_curvature[0], rgb_curvature[1], rgb_curvature[2]}});
       }
