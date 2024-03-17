@@ -58,6 +58,11 @@ protected:
 private:
 
   const common::MyMesh* printable_mesh = nullptr;
+  double model_yaw = 0;
+  double model_pitch = 4;
+  double model_roll = 1;
+
+  Eigen::Matrix4d modelRotMatrix() const;
 
   std::vector<qGlVertex> printableMeshToTriangles() const;
 

@@ -6,7 +6,7 @@ Camera::Camera()
 {
     w_lookat = {0, 0, 0};
     w_up = {0, 0, 1};
-    w_eye = {-1, 0, 0};
+    w_eye = {-3, 0, 0};
 
     fp = 1;
     bp = 20;

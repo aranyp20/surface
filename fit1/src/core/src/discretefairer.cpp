@@ -127,7 +127,7 @@ namespace core
 
 
         OpenMesh::VPropHandleT<double> doubleValues;
-        mesh.add_property(doubleValues);
+        mesh.add_property(doubleValues, "doubleValues");
 
         for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
         {

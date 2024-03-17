@@ -1,5 +1,5 @@
 #include "canvas.h"
-
+#include "discretefairer.h"
 
 
 
@@ -14,6 +14,8 @@ Canvas::Canvas(QWidget *parent) : QOpenGLWidget(parent)
         std::cout << "Error: Cannot read mesh from file." << std::endl;
     }
     else {
+      core::DiscreteFairer df;
+      df.execute(*input_mesh);
       printable_mesh = input_mesh;
     }
 
@@ -22,13 +24,42 @@ Canvas::Canvas(QWidget *parent) : QOpenGLWidget(parent)
 Canvas::~Canvas()
 {}
 
+
+Eigen::Matrix4d Canvas::modelRotMatrix() const
+{
+  Eigen::Matrix4d r_z;
+  r_z << std::cos(model_yaw), -std::sin(model_yaw), 0, 0,
+          std::sin(model_yaw), std::cos(model_yaw), 0, 0,
+          0,0,1,0,
+          0,0,0,1;
+
+  Eigen::Matrix4d r_x;
+  r_x << 1,0,0,0,
+        0, std::cos(model_roll), -std::sin(model_roll), 0,
+        0, std::sin(model_roll), std::cos(model_roll), 0,
+        0,0,0,1;
+
+  Eigen::Matrix4d r_y;
+  r_y << std::cos(model_pitch), 0, std::sin(model_pitch), 0,
+          0,1,0,0,
+          -std::sin(model_pitch),0, std::cos(model_pitch),0,
+          0,0,0,1;
+
+
+  std::cout<< r_x * r_y * r_z <<std::endl;
+
+  return r_x * r_y * r_z;
+      
+
+}
+
 void Canvas::initializeGL()
 {
     sp = new QOpenGLShaderProgram();
     sp->addShaderFromSourceCode(QOpenGLShader::Vertex,
                                 "#version 450\n"
 
-                                "uniform mat4  V, P;\n"
+                                "uniform mat4  M, V, P;\n"
 
                                 "in vec3 position;\n"
                                 "in vec3 color;\n"
@@ -38,7 +69,7 @@ void Canvas::initializeGL()
 
                                 "void main(){\n"
                                 "fragColor = vec4(color,1.0);\n"
-                                "gl_Position = P * V * pos;\n"
+                                "gl_Position = P * V * M * pos;\n"
                                 "}");
     sp->addShaderFromSourceCode(QOpenGLShader::Fragment,
                                 "#version 450\n"
@@ -94,7 +125,14 @@ std::vector<Canvas::qGlVertex> Canvas::printableMeshToTriangles() const
 
           common::MyMesh::Point vertex_position = printable_mesh->point(vh);
 
-          retval.push_back({{vertex_position[0] * 10, vertex_position[1] * 10 - 0.8, vertex_position[2] * 10}, {1.0, 0.0, 0.0}});
+          OpenMesh::VPropHandleT<double> myprop;
+          if(!printable_mesh->get_property_handle(myprop, "doubleValues")){
+            std::cout<<"Prop not found."<<std::endl;
+          }
+          
+          const auto curvature = printable_mesh->property(myprop, vh);
+
+          retval.push_back({{vertex_position[0] * 10, vertex_position[1] * 10 - 0.8, vertex_position[2] * 10}, {curvature/600 + 0.5, 0.0, 0.0}});
       }
   }
 
@@ -114,15 +152,32 @@ void Canvas::paintGL()
     QMatrix4x4 q_p;
 
 
+    const auto m = modelRotMatrix();
+    QMatrix4x4 q_m;
+
+
     for (int i = 0; i < 4; ++i) {
       for (int j = 0; j < 4; ++j) {
         q_v(i, j) = static_cast<float>(v(i, j));
       }
     }
 
+    for (int i = 0; i < 4; ++i) {
+      for (int j = 0; j < 4; ++j) {
+        q_p(i, j) = static_cast<float>(p(i, j));
+      }
+    }
+
+    for (int i = 0; i < 4; ++i) {
+      for (int j = 0; j < 4; ++j) {
+        q_m(i, j) = static_cast<float>(m(i, j));
+      }
+    }
+
     sp->bind();
     sp->setUniformValue("V", q_v);
     sp->setUniformValue("P", q_p);
+    sp->setUniformValue("M", q_m);
 
     vao.bind();
     vbo.bind();
