@@ -53,6 +53,7 @@ src/visualization/src/camera.cpp
 src/visualization/include/canvas.h
 ${UI_HEADERS}    
 src/core/src/discretefairer.cpp
+src/framework/src/objectloader.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -61,6 +62,7 @@ ${CMAKE_CURRENT_SOURCE_DIR}/src/
 ${CMAKE_CURRENT_SOURCE_DIR}/src/core/include/
 ${CMAKE_CURRENT_SOURCE_DIR}/src/common/include/
 ${CMAKE_CURRENT_SOURCE_DIR}/src/visualization/include/
+${CMAKE_CURRENT_SOURCE_DIR}/src/framework/include
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL Qt5::Widgets ${OPENMESH_LIBRARIES})

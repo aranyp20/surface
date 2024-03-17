@@ -12,6 +12,7 @@
 
 #include "common_defines.h"
 #include "camera.h"
+#include "objectloader.h"
 
 
 
@@ -61,7 +62,9 @@ protected:
 
 private:
 
-  const common::MyMesh* printable_mesh = nullptr;
+  framework::ObjectLoader object_loader; //TODO replace
+
+  std::shared_ptr<const common::MyMesh> printable_mesh = nullptr;
   double model_yaw = 0;
   double model_pitch = 4;
   double model_roll = 1;

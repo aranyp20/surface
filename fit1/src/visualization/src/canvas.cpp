@@ -1,23 +1,15 @@
 #include "canvas.h"
 #include "discretefairer.h"
+#include "organize.h"
 
 
 
 
 Canvas::Canvas(QWidget *parent) : QOpenGLWidget(parent)
 {
-    const auto input_mesh = new common::MyMesh; //TODO temp solution
+    
+  printable_mesh = object_loader.loadFromWavefrontObj("input1.obj");
 
-
-    if (!OpenMesh::IO::read_mesh(*input_mesh, "input1.obj"))
-    {
-        std::cout << "Error: Cannot read mesh from file." << std::endl;
-    }
-    else {
-      core::DiscreteFairer df;
-      df.execute(*input_mesh);
-      printable_mesh = input_mesh;
-    }
 
 }
 
@@ -105,10 +97,10 @@ void Canvas::initializeGL()
 }
 
 
-
+//TODO depr.
 void Canvas::setPrintable(const common::MyMesh* const _printable_mesh)
 {
-  printable_mesh = _printable_mesh;
+  //printable_mesh = _printable_mesh;
 }
 
 //TODO optimize it to use TRIANGLE_STRIP
@@ -142,8 +134,9 @@ std::vector<Canvas::qGlVertex> Canvas::printableMeshToTriangles() const
           }
           
           const auto curvature = printable_mesh->property(myprop, vh);
+          const auto rgb_curvature = common::color::hsvToRgb({curvature/600 + 0.5, 0.8, 0.8});
 
-          retval.push_back({{vertex_position[0] * 10, vertex_position[1] * 10 - 0.8, vertex_position[2] * 10}, {curvature/600 + 0.5, 0.0, 0.0}});
+          retval.push_back({{vertex_position[0] * 10, vertex_position[1] * 10 - 0.8, vertex_position[2] * 10}, {rgb_curvature[0], rgb_curvature[1], rgb_curvature[2]}});
       }
   }
 
