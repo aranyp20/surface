@@ -17,5 +17,15 @@ public:
 
 private:
     Ui::MainWindow *ui;
+
+public slots:
+
+    void yawPlus();
+    void yawMinus();
+    void pitchPlus();
+    void pitchMinus();
+    void rollPlus();
+    void rollMinus();
+
 };
 #endif // MAINWINDOW_H

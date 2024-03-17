@@ -6,8 +6,8 @@ TODO:
 
 BUGS:
 
--curvature gives NaNs
-
+-curvature gives NaNs (check)
+-align model to real yaw-pitch-roll
 
 
 SOLVED:

@@ -43,6 +43,10 @@ public:
 
   void setPrintable(const common::MyMesh* const _printable_mesh);
 
+  void changeYaw(double diff);
+  void changePitch(double diff);
+  void changeRoll(double diff);
+
 protected:
 
   void initializeGL()override;

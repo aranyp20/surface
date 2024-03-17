@@ -24,9 +24,10 @@ Canvas::Canvas(QWidget *parent) : QOpenGLWidget(parent)
 Canvas::~Canvas()
 {}
 
-
+//TODO this should go to somewhere else and be optimized
 Eigen::Matrix4d Canvas::modelRotMatrix() const
 {
+
   Eigen::Matrix4d r_z;
   r_z << std::cos(model_yaw), -std::sin(model_yaw), 0, 0,
           std::sin(model_yaw), std::cos(model_yaw), 0, 0,
@@ -45,12 +46,22 @@ Eigen::Matrix4d Canvas::modelRotMatrix() const
           -std::sin(model_pitch),0, std::cos(model_pitch),0,
           0,0,0,1;
 
-
-  std::cout<< r_x * r_y * r_z <<std::endl;
-
   return r_x * r_y * r_z;
-      
+}
 
+void Canvas::changeYaw(double diff)
+{
+  model_yaw += diff;
+}
+
+void Canvas::changePitch(double diff)
+{
+  model_pitch += diff;
+}
+
+void Canvas::changeRoll(double diff)
+{
+  model_roll += diff;
 }
 
 void Canvas::initializeGL()
