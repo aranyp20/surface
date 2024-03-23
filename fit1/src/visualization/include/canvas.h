@@ -71,6 +71,11 @@ private:
 
   Eigen::Matrix4d modelRotMatrix() const;
 
+
+  // divides THEN offsets
+  double hue_divider = 1;
+  double hue_offset = 0;
+  void setCurvaturToHueAttributes(const common::MyMesh& mesh, double outlier = 0.95);
   std::vector<qGlVertex> printableMeshToTriangles() const;
 
 };

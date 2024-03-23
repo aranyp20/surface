@@ -8,7 +8,7 @@
 Canvas::Canvas(QWidget *parent) : QOpenGLWidget(parent)
 {
     
-  printable_mesh = object_loader.loadFromFile("input2.obj");
+  printable_mesh = object_loader.loadFromFile("input1.obj");
 
 
 }
@@ -103,6 +103,39 @@ void Canvas::setPrintable(const common::MyMesh* const _printable_mesh)
   //printable_mesh = _printable_mesh;
 }
 
+
+void Canvas::setCurvaturToHueAttributes(const common::MyMesh& mesh, double outlier)
+{
+  std::vector<double> curvatures;
+  for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
+  {
+    auto& vh = *v_it;
+    auto& vertexPos = mesh.point(vh);
+
+    OpenMesh::VPropHandleT<double> myprop;
+    if(!printable_mesh->get_property_handle(myprop, "doubleValues")){
+      std::cout<<"Prop not found."<<std::endl;
+    }
+    
+    curvatures.push_back(printable_mesh->property(myprop, vh));
+  }
+
+  std::sort(curvatures.begin(), curvatures.end());
+
+  const auto start_rate = (1 - outlier) / 2;
+  const auto end_rate = outlier + start_rate;
+  const size_t start_index = std::floor(curvatures.size() * start_rate);
+  const size_t end_index = std::ceil(curvatures.size() * end_rate);
+  const auto& start_value = curvatures[start_index];
+  const auto& end_value = curvatures[end_index];
+
+  hue_divider = end_value - start_value;
+  hue_offset = -(start_value / hue_divider);
+
+  
+}
+
+
 //TODO optimize it to use TRIANGLE_STRIP
 std::vector<Canvas::qGlVertex> Canvas::printableMeshToTriangles() const
 {
@@ -131,9 +164,10 @@ std::vector<Canvas::qGlVertex> Canvas::printableMeshToTriangles() const
             std::cout<<"Prop not found."<<std::endl;
           }
           
+
           const auto curvature = printable_mesh->property(myprop, vh);
           //const auto rgb_curvature = common::color::hsvToRgb({curvature/600 + 0.5, 1.0, 1.0});
-          const auto rgb_curvature = common::color::hsvToRgb({curvature + 0.5, 1.0, 1.0});
+          const auto rgb_curvature = common::color::hsvToRgb({curvature / hue_divider + hue_offset, 1.0, 1.0});
 
 
           retval.push_back({{vertex_position[0], vertex_position[1], vertex_position[2]}, {rgb_curvature[0], rgb_curvature[1], rgb_curvature[2]}});
@@ -186,6 +220,7 @@ void Canvas::paintGL()
     vao.bind();
     vbo.bind();
 
+    setCurvaturToHueAttributes(*printable_mesh);
     std::vector<qGlVertex> pp = printableMeshToTriangles();
     const void *printable_data = pp.data();
 

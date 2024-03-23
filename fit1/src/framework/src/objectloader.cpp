@@ -65,10 +65,12 @@ void ObjectLoader::modelToShow(common::MyMesh& mesh) const
 
 void ObjectLoader::preprocessMesh(common::MyMesh& mesh) const
 {
+  modelToShow(mesh);
+
+  
   core::CurvatureCalculator cc;
   cc.execute(mesh);
 
-  modelToShow(mesh);
 }
 
 std::shared_ptr<common::MyMesh> ObjectLoader::loadFromFile(const std::string& path) const
