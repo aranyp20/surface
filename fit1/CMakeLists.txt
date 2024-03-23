@@ -52,8 +52,9 @@ src/visualization/src/canvas.cpp
 src/visualization/src/camera.cpp
 src/visualization/include/canvas.h
 ${UI_HEADERS}    
-src/core/src/discretefairer.cpp
+src/core/src/curvaturecalculator.cpp
 src/framework/src/objectloader.cpp
+src/common/include/organize.hpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

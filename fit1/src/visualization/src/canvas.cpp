@@ -1,6 +1,6 @@
 #include "canvas.h"
-#include "discretefairer.h"
-#include "organize.h"
+#include "curvaturecalculator.h"
+#include "organize.hpp"
 
 
 
@@ -8,7 +8,7 @@
 Canvas::Canvas(QWidget *parent) : QOpenGLWidget(parent)
 {
     
-  printable_mesh = object_loader.loadFromWavefrontObj("input1.obj");
+  printable_mesh = object_loader.loadFromFile("input2.obj");
 
 
 }
@@ -119,13 +119,11 @@ std::vector<Canvas::qGlVertex> Canvas::printableMeshToTriangles() const
   for (face_it = printable_mesh->faces_begin(); face_it != face_end; ++face_it)
   {
       common::MyMesh::FaceHandle fh = *face_it;
-
       common::MyMesh::HalfedgeHandle heh = printable_mesh->halfedge_handle(fh);
       
       for (common::MyMesh::ConstFaceHalfedgeIter fhe_it = printable_mesh->cfh_iter(fh); fhe_it.is_valid(); ++fhe_it)
       {
           common::MyMesh::VertexHandle vh = printable_mesh->to_vertex_handle(*fhe_it);
-
           common::MyMesh::Point vertex_position = printable_mesh->point(vh);
 
           OpenMesh::VPropHandleT<double> myprop;
@@ -134,9 +132,11 @@ std::vector<Canvas::qGlVertex> Canvas::printableMeshToTriangles() const
           }
           
           const auto curvature = printable_mesh->property(myprop, vh);
-          const auto rgb_curvature = common::color::hsvToRgb({curvature/600 + 0.5, 1.0, 1.0});
+          //const auto rgb_curvature = common::color::hsvToRgb({curvature/600 + 0.5, 1.0, 1.0});
+          const auto rgb_curvature = common::color::hsvToRgb({curvature + 0.5, 1.0, 1.0});
 
-          retval.push_back({{vertex_position[0] * 10, vertex_position[1] * 10 - 0.8, vertex_position[2] * 10}, {rgb_curvature[0], rgb_curvature[1], rgb_curvature[2]}});
+
+          retval.push_back({{vertex_position[0], vertex_position[1], vertex_position[2]}, {rgb_curvature[0], rgb_curvature[1], rgb_curvature[2]}});
       }
   }
 

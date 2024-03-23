@@ -12,7 +12,7 @@
 
 namespace core
 {
-    class DiscreteFairer
+    class CurvatureCalculator
     {
 
         struct SurfaceParam

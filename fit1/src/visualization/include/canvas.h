@@ -66,8 +66,8 @@ private:
 
   std::shared_ptr<const common::MyMesh> printable_mesh = nullptr;
   double model_yaw = 0;
-  double model_pitch = 4;
-  double model_roll = 1;
+  double model_pitch = 0;
+  double model_roll = 0;
 
   Eigen::Matrix4d modelRotMatrix() const;
 

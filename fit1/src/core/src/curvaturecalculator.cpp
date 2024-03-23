@@ -1,9 +1,9 @@
-#include "discretefairer.h"
+#include "curvaturecalculator.h"
 
 namespace core
 {
     // TODO before integrated: cps.P size check + origo center precondition
-    std::vector<DiscreteFairer::SurfaceParam> DiscreteFairer::InputPoints::calcUVs() const
+    std::vector<CurvatureCalculator::SurfaceParam> CurvatureCalculator::InputPoints::calcUVs() const
     {
         std::vector<SurfaceParam> retval;
 
@@ -45,7 +45,7 @@ namespace core
         return retval;
     }
 
-    DiscreteFairer::InputPoints DiscreteFairer::InputPoints::translatePoints() const
+    CurvatureCalculator::InputPoints CurvatureCalculator::InputPoints::translatePoints() const
     {
         auto clone = *this;
 
@@ -58,7 +58,7 @@ namespace core
         return clone;
     }
 
-    DiscreteFairer::DerResults DiscreteFairer::calcDer(const InputPoints &ipp) const
+    CurvatureCalculator::DerResults CurvatureCalculator::calcDer(const InputPoints &ipp) const
     {
         const auto uvs = ipp.calcUVs();
 
@@ -97,14 +97,14 @@ namespace core
         return {b.row(0), b.row(1), b.row(2), b.row(3), b.row(4)};
     }
 
-    Eigen::Vector3d DiscreteFairer::S(const double u, const double v, const DerResults &Ss) const
+    Eigen::Vector3d CurvatureCalculator::S(const double u, const double v, const DerResults &Ss) const
     {
         const Eigen::Vector3d S00{0, 0, 0};
 
         return S00 + u * Ss.Su + v * Ss.Sv + 0.5 * u * u * Ss.Suu + u * v * Ss.Suv + 0.5 * v * v * Ss.Svv;
     }
 
-    double DiscreteFairer::calcCurvature(const InputPoints &ipp) const
+    double CurvatureCalculator::calcCurvature(const InputPoints &ipp) const
     {
         const auto ip = ipp.translatePoints();
 
@@ -122,7 +122,7 @@ namespace core
         return (L * G - M * F + N * E - M * F) / (2 * E * G - F * F);
     }
 
-    void DiscreteFairer::calcCurvatures(common::MyMesh &mesh) const
+    void CurvatureCalculator::calcCurvatures(common::MyMesh &mesh) const
     {
 
 
@@ -133,7 +133,7 @@ namespace core
         {
             common::MyMesh::VertexHandle vh = *v_it;
 
-            common::MyMesh::Point vertexPos = mesh.point(vh); // TODO ref?
+            const common::MyMesh::Point& vertexPos = mesh.point(vh); // TODO ref?
 
             InputPoints cip;
             cip.center = Eigen::Vector3d(vertexPos[0], vertexPos[1], vertexPos[2]);
@@ -156,7 +156,7 @@ namespace core
         }
     }
 
-    void DiscreteFairer::execute(common::MyMesh &mesh)
+    void CurvatureCalculator::execute(common::MyMesh &mesh)
     {
         calcCurvatures(mesh);
     }

@@ -6,7 +6,6 @@
 #include "ui_mainwindow.h"
 
 
-#include "discretefairer.h"
 
 int main(int argc, char *argv[])
 {
@@ -14,10 +13,8 @@ int main(int argc, char *argv[])
 
 
 
-        // Set the Fusion style as the default
     QApplication::setStyle(QStyleFactory::create("Fusion"));
 
-    // Set a custom color palette
     QPalette darkPalette;
     darkPalette.setColor(QPalette::Window, QColor(53, 53, 53));
     darkPalette.setColor(QPalette::WindowText, Qt::white);
@@ -41,9 +38,6 @@ int main(int argc, char *argv[])
 
     w.show();
 
-
-    //core::DiscreteFairer df;
-    //df.execute(mesh);
 
     return a.exec();
 }
