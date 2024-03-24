@@ -11,6 +11,7 @@
                 "/usr/include/x86_64-linux-gnu/qt5/QtGui",
                 "${workspaceFolder}/build",
                 "/usr/include/x86_64-linux-gnu/qt5/QtCore",
+                "${workspaceFolder}/src/core/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang-14",

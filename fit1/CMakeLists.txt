@@ -55,6 +55,7 @@ ${UI_HEADERS}
 src/core/src/curvaturecalculator.cpp
 src/framework/src/objectloader.cpp
 src/common/include/organize.hpp
+src/core/src/discretefairer.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

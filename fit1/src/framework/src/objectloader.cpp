@@ -1,7 +1,7 @@
 #include "objectloader.h"
 #include <iostream>
 
-#include "curvaturecalculator.h"
+#include "discretefairer.h"
 
 namespace framework {
 
@@ -68,8 +68,8 @@ void ObjectLoader::preprocessMesh(common::MyMesh& mesh) const
   modelToShow(mesh);
 
   
-  core::CurvatureCalculator cc;
-  cc.execute(mesh);
+  core::DiscreteFairer df;
+  df.execute(mesh);
 
 }
 

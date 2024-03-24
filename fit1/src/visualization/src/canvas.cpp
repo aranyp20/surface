@@ -8,7 +8,7 @@
 Canvas::Canvas(QWidget *parent) : QOpenGLWidget(parent)
 {
     
-  printable_mesh = object_loader.loadFromFile("input1.obj");
+  printable_mesh = object_loader.loadFromFile("input3.stl");
 
 
 }
@@ -159,15 +159,18 @@ std::vector<Canvas::qGlVertex> Canvas::printableMeshToTriangles() const
           common::MyMesh::VertexHandle vh = printable_mesh->to_vertex_handle(*fhe_it);
           common::MyMesh::Point vertex_position = printable_mesh->point(vh);
 
+
+
+          double color = 0;
+          bool has_curvature = false;
+
           OpenMesh::VPropHandleT<double> myprop;
-          if(!printable_mesh->get_property_handle(myprop, "doubleValues")){
-            std::cout<<"Prop not found."<<std::endl;
+          if(printable_mesh->get_property_handle(myprop, "doubleValues")){
+            color = printable_mesh->property(myprop, vh);
+            has_curvature = true;
           }
           
-
-          const auto curvature = printable_mesh->property(myprop, vh);
-          //const auto rgb_curvature = common::color::hsvToRgb({curvature/600 + 0.5, 1.0, 1.0});
-          const auto rgb_curvature = common::color::hsvToRgb({curvature / hue_divider + hue_offset, 1.0, 1.0});
+          const auto rgb_curvature = has_curvature ? common::color::hsvToRgb({color / hue_divider + hue_offset, 1.0, 1.0}) : Eigen::Vector3d(0.0, 0.0, 0.0);
 
 
           retval.push_back({{vertex_position[0], vertex_position[1], vertex_position[2]}, {rgb_curvature[0], rgb_curvature[1], rgb_curvature[2]}});
