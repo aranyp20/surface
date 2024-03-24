@@ -42,12 +42,39 @@ namespace core
 
         DerResults calcDer(const InputPoints &ipp) const;
         Eigen::Vector3d S(const double u, const double v, const DerResults &Ss) const;
-        double calcCurvature(const InputPoints &ipp) const;
-        void calcCurvatures(common::MyMesh &mesh) const;
+        void calcCurvature(const InputPoints &ipp); //TODO rename
+        
+        
+        //void calcCurvatures(common::MyMesh &mesh) const;
 
     public:
+        struct FundamentalElements
+        {
+            double E = 0;
+            double F = 0;
+            double G = 0;
 
-        void execute(common::MyMesh &mesh);
+            double L = 0;
+            double M = 0;
+            double N = 0;
+        };
+
+        FundamentalElements getFundamentalElements() const;
+        Eigen::Vector3d getNormal() const;
+        double getCurvature() const;
+
+
+        void execute(common::MyMesh::VertexHandle &vh);
+        void execute(const Eigen::Vector3d vertex_pos, const std::vector<Eigen::Vector3d>& neighbors);
+
+
+        CurvatureCalculator(common::MyMesh &mesh);
+    private:
+
+        common::MyMesh& mesh;
+
+        FundamentalElements fundamental_elements;
+        Eigen::Vector3d normal;
     };
 
 }

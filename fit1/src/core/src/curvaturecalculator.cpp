@@ -104,24 +104,33 @@ namespace core
         return S00 + u * Ss.Su + v * Ss.Sv + 0.5 * u * u * Ss.Suu + u * v * Ss.Suv + 0.5 * v * v * Ss.Svv;
     }
 
-    double CurvatureCalculator::calcCurvature(const InputPoints &ipp) const
+    void CurvatureCalculator::calcCurvature(const InputPoints &ipp)
     {
         const auto ip = ipp.translatePoints();
 
         const auto eq = calcDer(ip);
 
-        const auto E = eq.Su.norm() * eq.Su.norm();
-        const auto G = eq.Sv.norm() * eq.Sv.norm();
-        const auto F = eq.Su.dot(eq.Sv);
+        fundamental_elements.E = eq.Su.norm() * eq.Su.norm();
+        fundamental_elements.G = eq.Sv.norm() * eq.Sv.norm();
+        fundamental_elements.F = eq.Su.dot(eq.Sv);
 
-        const auto n = eq.Su.cross(eq.Sv).normalized();
-        const auto L = eq.Suu.dot(n);
-        const auto M = eq.Suv.dot(n);
-        const auto N = eq.Svv.dot(n);
+        normal = eq.Su.cross(eq.Sv).normalized();
+        
+        fundamental_elements.L = eq.Suu.dot(normal);
+        fundamental_elements.M = eq.Suv.dot(normal);
+        fundamental_elements.N = eq.Svv.dot(normal);
 
-        return (L * G - M * F + N * E - M * F) / (2 * E * G - F * F);
+        //return (L * G - M * F + N * E - M * F) / (2 * E * G - F * F);
     }
 
+    double CurvatureCalculator::getCurvature() const
+    {
+        const auto& fe = fundamental_elements;
+        return (fe.L * fe.G - fe.M * fe.F + fe.N * fe.E - fe.M * fe.F) / (2 * fe.E * fe.G - fe.F * fe.F);
+    }
+
+
+/*
     void CurvatureCalculator::calcCurvatures(common::MyMesh &mesh) const
     {
 
@@ -131,19 +140,7 @@ namespace core
 
         for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
         {
-            common::MyMesh::VertexHandle vh = *v_it;
 
-            const common::MyMesh::Point& vertexPos = mesh.point(vh); // TODO ref?
-
-            InputPoints cip;
-            cip.center = Eigen::Vector3d(vertexPos[0], vertexPos[1], vertexPos[2]);
-            for (common::MyMesh::VertexOHalfedgeIter voh_it = mesh.voh_iter(vh); voh_it.is_valid(); ++voh_it)
-            {
-                common::MyMesh::VertexHandle neighborVh = mesh.to_vertex_handle(*voh_it);
-
-                const auto neighborPos = mesh.point(neighborVh); // TODO ref?
-                cip.P.emplace_back(neighborPos[0], neighborPos[1], neighborPos[2]);
-            }
 
             mesh.property(doubleValues, vh) = calcCurvature(cip);
         }
@@ -155,11 +152,53 @@ namespace core
             //std::cout << "Vertex " << vh.idx() << ": Double Value = " << doubleValue << std::endl;
         }
     }
+*/
 
-    void CurvatureCalculator::execute(common::MyMesh &mesh)
+    void CurvatureCalculator::execute(common::MyMesh::VertexHandle &vh)
     {
-        calcCurvatures(mesh);
+        const common::MyMesh::Point& vertexPos = mesh.point(vh);
+
+        InputPoints cip;
+        cip.center = Eigen::Vector3d(vertexPos[0], vertexPos[1], vertexPos[2]);
+        for (common::MyMesh::VertexOHalfedgeIter voh_it = mesh.voh_iter(vh); voh_it.is_valid(); ++voh_it)
+        {
+            common::MyMesh::VertexHandle neighborVh = mesh.to_vertex_handle(*voh_it);
+
+            const auto neighborPos = mesh.point(neighborVh); // TODO ref?
+            cip.P.emplace_back(neighborPos[0], neighborPos[1], neighborPos[2]);
+        }
+
+        calcCurvature(cip);
     }
+
+    void CurvatureCalculator::execute(const Eigen::Vector3d vertex_pos, const std::vector<Eigen::Vector3d>& neighbors)
+    {
+        InputPoints cip;
+        cip.center = Eigen::Vector3d(vertex_pos[0], vertex_pos[1], vertex_pos[2]);
+        for (const auto& neighbor_pos : neighbors)
+        {
+            cip.P.emplace_back(neighbor_pos[0], neighbor_pos[1], neighbor_pos[2]);
+        }
+
+        calcCurvature(cip);
+    }
+
+
+    CurvatureCalculator::FundamentalElements CurvatureCalculator::getFundamentalElements() const
+    {
+        return fundamental_elements;
+    }
+
+    Eigen::Vector3d CurvatureCalculator::getNormal() const
+    {
+        return normal;
+    }
+
+    CurvatureCalculator::CurvatureCalculator(common::MyMesh &mesh) : mesh(mesh)
+    {
+    }
+
+
 
 
 

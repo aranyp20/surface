@@ -49,15 +49,15 @@ namespace color {
     }
 
 
-// avarage //
+// average //
     template<typename T>
     T average(T arg1) {
-        return static_cast<double>(arg1);
+        return arg1;
     }
 
     template<typename T, typename... Args>
     T average(T arg1, Args... args) {
-        return (static_cast<double>(arg1) + average(args...)) / (sizeof...(args) + 1);
+        return (arg1 + average(args...)) / (sizeof...(args) + 1);
     }
 ////////////
 
