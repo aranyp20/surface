@@ -63,6 +63,8 @@ void Canvas::initializeGL()
                                 "#version 450\n"
 
                                 "uniform mat4  M, V, P;\n"
+                                "uniform float offset;\n"
+
 
                                 "in vec3 position;\n"
                                 "in vec3 color;\n"
@@ -72,12 +74,14 @@ void Canvas::initializeGL()
 
                                 "void main(){\n"
                                 "fragColor = vec4(color,1.0);\n"
-                                "gl_Position = P * V * M * pos;\n"
+                                "pos = P * V * M * pos;\n"
+                                "gl_Position = vec4(pos.x, pos.y, pos.z - offset, pos.w);\n"
                                 "}");
     sp->addShaderFromSourceCode(QOpenGLShader::Fragment,
                                 "#version 450\n"
                                 "in vec4 fragColor;\n"
                                 "out vec4 finalColor;\n"
+
                                 "void main(){\n"
                                 "finalColor = fragColor;\n"
                                 "}");
@@ -257,6 +261,9 @@ void Canvas::paintGL()
     sp->setUniformValue("P", q_p);
     sp->setUniformValue("M", q_m);
 
+    sp->setUniformValue("offset", 0.0f);
+
+
     vao.bind();
     vbo.bind();
 
@@ -286,6 +293,9 @@ void Canvas::paintGL()
 
     sp->enableAttributeArray("position");
     sp->enableAttributeArray("color");
+
+    sp->setUniformValue("offset", 0.01f);
+
 
     sp->setAttributeBuffer(0, GL_FLOAT, offsetof(qGlVertex, position), 3, sizeof(qGlVertex));
     sp->setAttributeBuffer(1, GL_FLOAT, offsetof(qGlVertex, color), 3, sizeof(qGlVertex));

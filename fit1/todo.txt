@@ -3,6 +3,8 @@ TODO:
 
 
 -fix yaw-pitch-roll
+-offset edges to smaller z during rendering
+
 
 BUGS:
 
