@@ -84,7 +84,16 @@ std::shared_ptr<common::MyMesh> ObjectLoader::loadFromFile(const std::string& pa
   }
   else {
     preprocessMesh(input_mesh);
-    return std::make_shared<common::MyMesh>(std::move(input_mesh));
+
+    common::MyMesh mesh;
+      // Add vertices
+      common::MyMesh::VertexHandle v0 = mesh.add_vertex(common::MyMesh::Point(0, 0, 0)); // A
+      common::MyMesh::VertexHandle v1 = mesh.add_vertex(common::MyMesh::Point(1, 0, 0)); // B
+      common::MyMesh::VertexHandle v2 = mesh.add_vertex(common::MyMesh::Point(0.5, 1, 0)); // C
+
+      mesh.add_face(v0, v1, v2);
+
+    return std::make_shared<common::MyMesh>(std::move(mesh));
   }
 
   return nullptr;

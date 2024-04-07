@@ -61,7 +61,6 @@ namespace color {
     }
 ////////////
 
-
     inline Eigen::Vector3d toEigenV3(const OpenMesh::DefaultTraits::Point& from)
     {
         return Eigen::Vector3d(from[0], from[1], from[2]);

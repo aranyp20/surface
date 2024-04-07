@@ -83,6 +83,8 @@ void Canvas::initializeGL()
                                 "}");
     sp->link();
 
+
+
     vao.create();
     vao.bind();
     vbo.create();
@@ -106,6 +108,7 @@ void Canvas::setPrintable(const common::MyMesh* const _printable_mesh)
 
 void Canvas::setCurvaturToHueAttributes(const common::MyMesh& mesh, double outlier)
 {
+  return;
   std::vector<double> curvatures;
   for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
   {
@@ -133,6 +136,39 @@ void Canvas::setCurvaturToHueAttributes(const common::MyMesh& mesh, double outli
   hue_offset = -(start_value / hue_divider);
 
   
+}
+
+std::vector<Canvas::qGlVertex> Canvas::printableMeshToLines() const //edges
+{
+  std::vector<qGlVertex> retval;
+
+  if (!printable_mesh) {
+    std::cout<< "Canvas::printableMeshToTriangles called while printable_mesh was nullptr."<<std::endl;
+    return retval;
+  }
+
+  auto& mesh = *printable_mesh;  
+
+  for (common::MyMesh::EdgeIter e_it = mesh.edges_begin(); e_it != mesh.edges_end(); ++e_it) {
+    common::MyMesh::EdgeHandle edge = *e_it;
+
+    // Get the vertices of the edge
+    common::MyMesh::VertexHandle v0 = mesh.from_vertex_handle(mesh.halfedge_handle(edge, 0));
+    common::MyMesh::VertexHandle v1 = mesh.to_vertex_handle(mesh.halfedge_handle(edge, 0));
+
+    common::MyMesh::Point vertex_position1 = printable_mesh->point(v0);
+    common::MyMesh::Point vertex_position2 = printable_mesh->point(v1);
+
+
+
+    retval.push_back({{vertex_position1[0], vertex_position1[1], vertex_position1[2]}, {0.0, 0.0, 1.0}});
+    retval.push_back({{vertex_position2[0], vertex_position2[1], vertex_position2[2]}, {0.0, 0.0, 1.0}});
+
+
+
+  }
+
+  return retval;
 }
 
 
@@ -163,12 +199,13 @@ std::vector<Canvas::qGlVertex> Canvas::printableMeshToTriangles() const
 
           double color = 0;
           bool has_curvature = false;
-
+/*
           OpenMesh::VPropHandleT<double> myprop;
           if(printable_mesh->get_property_handle(myprop, "doubleValues")){
             color = printable_mesh->property(myprop, vh);
             has_curvature = true;
           }
+*/
           
           const auto rgb_curvature = has_curvature ? common::color::hsvToRgb({color / hue_divider + hue_offset, 1.0, 1.0}) : Eigen::Vector3d(0.0, 0.0, 0.0);
 
@@ -239,6 +276,21 @@ void Canvas::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glDrawArrays(GL_TRIANGLES, 0, pp.size());
+
+  ////////////////
+
+    std::vector<qGlVertex> edgpoints = printableMeshToLines();
+    const void *printable_data2 = edgpoints.data();
+
+    vbo.allocate(printable_data2, sizeof(qGlVertex) * edgpoints.size());
+
+    sp->enableAttributeArray("position");
+    sp->enableAttributeArray("color");
+
+    sp->setAttributeBuffer(0, GL_FLOAT, offsetof(qGlVertex, position), 3, sizeof(qGlVertex));
+    sp->setAttributeBuffer(1, GL_FLOAT, offsetof(qGlVertex, color), 3, sizeof(qGlVertex));
+    glDrawArrays(GL_LINES, 0, edgpoints.size());
+
 }
 
 

@@ -5,18 +5,45 @@
 
 namespace core {
 
+namespace {
 
-class MySubdivider : public OpenMesh::Subdivider::Uniform::MidpointT<common::MyMesh> {
-public:
-    bool mySubdivideFunction(common::MyMesh& mesh) {
-        return this->subdivide(mesh, 1);
+void subdivide(common::MyMesh& mesh)
+{
+    for (common::MyMesh::FaceIter f_it = mesh.faces_begin(); f_it != mesh.faces_end(); ++f_it)
+    {
+        common::MyMesh::FaceHandle fh = *f_it;
+        
+
+        std::vector<common::MyMesh::EdgeHandle> ehs;
+        // Iterate through edges of the face
+        for (common::MyMesh::FaceEdgeIter fe_it = mesh.fe_iter(fh); fe_it.is_valid(); ++fe_it)
+        {
+            common::MyMesh::EdgeHandle eh = *fe_it;   
+        }
+
+        for (auto& eh : ehs) {
+
+            common::MyMesh::HalfedgeHandle heh = mesh.halfedge_handle(eh, 0); // get the halfedge handle
+            
+            // Get the midpoint of the edge
+            common::MyMesh::Point midpoint = (mesh.point(mesh.to_vertex_handle(heh)) + mesh.point(mesh.from_vertex_handle(heh))) / 2.0;
+
+            // Split the edge at the midpoint
+            common::MyMesh::VertexHandle new_vertex = mesh.split(eh, midpoint);
+        }
     }
-};
+
+
+}
+
+
+}
 
 
 void DiscreteFairer::execute(common::MyMesh& mesh)
 {
     CurvatureCalculator cc(mesh);
+    //subdivide(mesh);
 
 
     OpenMesh::VPropHandleT<double> doubleValues;
@@ -27,11 +54,14 @@ void DiscreteFairer::execute(common::MyMesh& mesh)
         common::MyMesh::VertexHandle vh = *v_it;
 
         cc.execute(vh);
-        
 
         mesh.property(doubleValues, vh) = cc.getCurvature();
     }
 
+
+
+    return; //TODO
+/*
     for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
     {
         common::MyMesh::VertexHandle vh = *v_it;
@@ -39,9 +69,6 @@ void DiscreteFairer::execute(common::MyMesh& mesh)
         //std::cout << "Vertex " << vh.idx() << ": Double Value = " << doubleValue << std::endl;
     }
 
-
-    return; //TODO
-/*
     size_t original_vert_num = mesh.n_vertices();
 
     MySubdivider midpoint_subdivider;
