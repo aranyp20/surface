@@ -120,7 +120,6 @@ namespace core
         fundamental_elements.M = eq.Suv.dot(normal);
         fundamental_elements.N = eq.Svv.dot(normal);
 
-        //return (L * G - M * F + N * E - M * F) / (2 * E * G - F * F);
     }
 
     double CurvatureCalculator::getCurvature() const
@@ -129,6 +128,29 @@ namespace core
         return (fe.L * fe.G - fe.M * fe.F + fe.N * fe.E - fe.M * fe.F) / (2 * fe.E * fe.G - fe.F * fe.F);
     }
 
+    double CurvatureCalculator::getGaussianCurvature() const
+    {
+        const auto& fe = fundamental_elements;
+        return (fe.N * fe.E - 2 * fe.M * fe.F + fe.L * fe.G) / (fe.E * fe.G - fe.F * fe.F);
+    }
+
+    double CurvatureCalculator::getMaxPrincipleCurvature() const
+    {
+        const auto main_curvature = getCurvature();
+        const auto gaussian_curvature = getGaussianCurvature();
+        return 0; 
+    }
+
+/*
+    k2 = B - k1
+    k1(B - k1) = A
+
+    k1*B - k1*k1 -A= 0
+
+    a=-1
+    b=B
+    c=-A
+*/
 
 /*
     void CurvatureCalculator::calcCurvatures(common::MyMesh &mesh) const

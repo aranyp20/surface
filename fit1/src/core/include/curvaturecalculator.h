@@ -62,6 +62,8 @@ namespace core
         FundamentalElements getFundamentalElements() const;
         Eigen::Vector3d getNormal() const;
         double getCurvature() const;
+        double getGaussianCurvature() const;
+        double getMaxPrincipleCurvature() const;
 
 
         void execute(common::MyMesh::VertexHandle &vh);

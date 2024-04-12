@@ -37,10 +37,16 @@ void subdivide(common::MyMesh& mesh)
 }
 
 
+void iterateVertex(common::MyMesh& mesh, const common::MyMesh::VertexHandle& iteratable)
+{
+
 }
 
 
-void DiscreteFairer::execute(common::MyMesh& mesh)
+}
+
+
+void DiscreteFairer::execute(common::MyMesh& mesh, size_t face_split_count, size_t iteration_count)
 {
     CurvatureCalculator cc(mesh);
     //subdivide(mesh);
@@ -60,39 +66,7 @@ void DiscreteFairer::execute(common::MyMesh& mesh)
 
 
 
-    return; //TODO
-/*
-    for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
-    {
-        common::MyMesh::VertexHandle vh = *v_it;
-        double doubleValue = mesh.property(doubleValues, vh);
-        //std::cout << "Vertex " << vh.idx() << ": Double Value = " << doubleValue << std::endl;
-    }
-
-    size_t original_vert_num = mesh.n_vertices();
-
-    MySubdivider midpoint_subdivider;
-    midpoint_subdivider.mySubdivideFunction(mesh);
-
-
-    OpenMesh::VPropHandleT<double> doubleValues;
-    mesh.add_property(doubleValues, "doubleValues");
-
-
-    size_t processed_verts = 0;
-    for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it, processed_verts++)
-    {
-        common::MyMesh::VertexHandle vh = *v_it;
-
-        if(processed_verts < original_vert_num){
-            mesh.property(doubleValues, vh) = 1;
-        }
-        else {
-            mesh.property(doubleValues, vh) = 0;
-        }
-    }
-
-*/
+    return;
 
 }
 

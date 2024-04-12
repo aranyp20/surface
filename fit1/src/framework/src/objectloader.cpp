@@ -80,13 +80,25 @@ void aaaaa(common::MyMesh& mesh)
   common::MyMesh::VertexHandle v1 = mesh.add_vertex(common::MyMesh::Point(1, 0, 0)); // B
   common::MyMesh::VertexHandle v2 = mesh.add_vertex(common::MyMesh::Point(0.5, 1, 0)); // C
 
-  // Add the original triangle face
   common::MyMesh::FaceHandle f0 = mesh.add_face(v0, v1, v2);
 
-  // Split each edge of the original triangle
   common::MyMesh::EdgeHandle e0 = mesh.edge_handle(mesh.find_halfedge(v0, v1)); // Edge AB
-  common::MyMesh::Point midpoint0 = (mesh.point(mesh.to_vertex_handle(mesh.find_halfedge(v0, v1))) + mesh.point(mesh.from_vertex_handle(mesh.find_halfedge(v0, v1)))) / 2.0;
+  common::MyMesh::Point midpoint0 = mesh.calc_edge_midpoint(e0);
   common::MyMesh::VertexHandle v3 = mesh.split(e0, midpoint0); // D
+  
+  
+  common::MyMesh::EdgeHandle e1 = mesh.edge_handle(mesh.find_halfedge(v1, v2)); // Edge AB
+  mesh.split(e1, mesh.calc_edge_midpoint(e1));
+  common::MyMesh::EdgeHandle e2 = mesh.edge_handle(mesh.find_halfedge(v0, v2)); // Edge AB
+  mesh.split(e2, mesh.calc_edge_midpoint(e2));
+
+  mesh.flip(mesh.edge_handle(mesh.find_halfedge(v2, v3)));
+
+
+/*
+  // Add the original triangle face
+
+  // Split each edge of the original triangle
 
   common::MyMesh::EdgeHandle e1 = mesh.edge_handle(mesh.find_halfedge(v1, v2)); // Edge BC
   common::MyMesh::Point midpoint1 = (mesh.point(mesh.to_vertex_handle(mesh.find_halfedge(v1, v2))) + mesh.point(mesh.from_vertex_handle(mesh.find_halfedge(v1, v2)))) / 2.0;
@@ -102,17 +114,16 @@ void aaaaa(common::MyMesh& mesh)
   mesh.add_face(v0, v3, v5); // BEC
   mesh.add_face(v1, v3, v4); // CFA
   mesh.add_face(v2, v4, v5); // DEF
+*/
 
 
 
 
-    //mesh.delete_face(*(mesh.faces_begin()), true);
+//  mesh.delete_face(*(mesh.faces_begin()), true);
 
   // Remove the original triangle face
   //mesh.delete_face(f0, false);
 
-  // Garbage collection
-  mesh.garbage_collection();
 
   /*
         common::MyMesh::VertexHandle v0 = mesh.add_vertex(common::MyMesh::Point(0, 0, 0)); // A
@@ -171,7 +182,7 @@ std::shared_ptr<common::MyMesh> ObjectLoader::loadFromFile(const std::string& pa
       aaaaa(mesh);
 
 
-    return std::make_shared<common::MyMesh>(std::move(input_mesh));
+    return std::make_shared<common::MyMesh>(std::move(mesh));
   }
 
   return nullptr;

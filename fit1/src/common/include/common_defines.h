@@ -5,7 +5,10 @@
 
 namespace common {
 
-typedef OpenMesh::TriMesh_ArrayKernelT<> MyMesh;
-
+struct MyTraits : public OpenMesh::DefaultTraits
+{
+    FaceAttributes(OpenMesh::Attributes::Status);
+};
+typedef OpenMesh::TriMesh_ArrayKernelT<MyTraits> MyMesh;
 
 }
