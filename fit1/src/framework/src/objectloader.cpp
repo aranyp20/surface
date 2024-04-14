@@ -69,30 +69,33 @@ void ObjectLoader::preprocessMesh(common::MyMesh& mesh) const
 
   
   core::DiscreteFairer df;
-  df.execute(mesh);
+  df.execute(mesh, 1, 1);
 
 }
 
 void aaaaa(common::MyMesh& mesh)
 {
 
-    common::MyMesh::VertexHandle v0 = mesh.add_vertex(common::MyMesh::Point(0, 0, 0)); // A
+  common::MyMesh::VertexHandle v0 = mesh.add_vertex(common::MyMesh::Point(0, 0, 0)); // A
   common::MyMesh::VertexHandle v1 = mesh.add_vertex(common::MyMesh::Point(1, 0, 0)); // B
   common::MyMesh::VertexHandle v2 = mesh.add_vertex(common::MyMesh::Point(0.5, 1, 0)); // C
 
   common::MyMesh::FaceHandle f0 = mesh.add_face(v0, v1, v2);
 
-  common::MyMesh::EdgeHandle e0 = mesh.edge_handle(mesh.find_halfedge(v0, v1)); // Edge AB
-  common::MyMesh::Point midpoint0 = mesh.calc_edge_midpoint(e0);
-  common::MyMesh::VertexHandle v3 = mesh.split(e0, midpoint0); // D
-  
-  
-  common::MyMesh::EdgeHandle e1 = mesh.edge_handle(mesh.find_halfedge(v1, v2)); // Edge AB
-  mesh.split(e1, mesh.calc_edge_midpoint(e1));
-  common::MyMesh::EdgeHandle e2 = mesh.edge_handle(mesh.find_halfedge(v0, v2)); // Edge AB
-  mesh.split(e2, mesh.calc_edge_midpoint(e2));
+return;
+  std::vector<common::MyMesh::FaceHandle> original_faces = {f0};
 
-  mesh.flip(mesh.edge_handle(mesh.find_halfedge(v2, v3)));
+  common::MyMesh::EdgeHandle e1 = mesh.edge_handle(mesh.find_halfedge(v1, v2)); // Edge AB
+  auto v3 = mesh.split(e1, mesh.calc_edge_midpoint(e1));
+
+  mesh.delete_face(f0);
+
+  for (common::MyMesh::FaceIter f_it = mesh.faces_begin(); f_it != mesh.faces_end(); ++f_it)
+  {
+      common::MyMesh::FaceHandle fh = *f_it;
+
+      std::cout<<"alma "<<(fh == original_faces[0])<<std::endl;
+  }
 
 
 /*
@@ -175,12 +178,13 @@ std::shared_ptr<common::MyMesh> ObjectLoader::loadFromFile(const std::string& pa
       return nullptr;
   }
   else {
-    preprocessMesh(input_mesh);
+    //preprocessMesh(input_mesh);
 
     common::MyMesh mesh;
 
-      aaaaa(mesh);
+    aaaaa(mesh);
 
+    preprocessMesh(mesh);
 
     return std::make_shared<common::MyMesh>(std::move(mesh));
   }
