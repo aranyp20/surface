@@ -184,9 +184,9 @@ std::shared_ptr<common::MyMesh> ObjectLoader::loadFromFile(const std::string& pa
 
     aaaaa(mesh);
 
-    preprocessMesh(mesh);
+    preprocessMesh(input_mesh);
 
-    return std::make_shared<common::MyMesh>(std::move(mesh));
+    return std::make_shared<common::MyMesh>(std::move(input_mesh));
   }
 
   return nullptr;

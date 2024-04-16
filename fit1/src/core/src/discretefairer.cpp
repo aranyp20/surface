@@ -34,14 +34,9 @@ void subdivide(common::MyMesh& mesh)
         original_edges.push_back(*e_it);
     }
 
-    std::vector<common::MyMesh::FaceHandle> original_faces;
-    for (common::MyMesh::FaceIter f_it = mesh.faces_begin(); f_it != mesh.faces_end(); ++f_it)
-    {
-        original_faces.push_back(*f_it);
-    }
+    std::vector<common::MyMesh::VertexHandle> new_vertices;
+    std::vector<common::MyMesh::EdgeHandle> flippable_edges;
 
-
-    std::unordered_map<common::MyMesh::FaceHandle, common::MyMesh::EdgeHandle> face_memory;
     for(auto& original_edge_h : original_edges)
     {
         auto heh1 = mesh.halfedge_handle(original_edge_h, 0);
@@ -61,20 +56,15 @@ void subdivide(common::MyMesh& mesh)
 
 
         if (face1.is_valid()) {
-            bool face_is_original = std::find(original_faces.begin(), original_faces.end(), face1) != original_faces.end();
+            for (common::MyMesh::FaceVertexIter fv_it = mesh.fv_iter(face1); fv_it.is_valid(); ++fv_it) {
+                common::MyMesh::VertexHandle v_face = *fv_it;
 
-            if(face_is_original) {
-                for (common::MyMesh::FaceVertexIter fv_it = mesh.fv_iter(face1); fv_it.is_valid(); ++fv_it) {
-                    common::MyMesh::VertexHandle v_face = *fv_it;
-
-                    if (v_face != v1 && v_face != v2) {
-                        opposite_vertex1 = v_face;
-                        break;
-                    }
+                if (v_face != v1 && v_face != v2) {
+                    opposite_vertex1 = v_face;
+                    break;
                 }
             }
         }
-        //std::cout<<"a1 "<<opposite_vertex1.is_valid()<<std::endl;
 
         if (face2.is_valid()) {
             for (common::MyMesh::FaceVertexIter fv_it = mesh.fv_iter(face2); fv_it.is_valid(); ++fv_it) {
@@ -88,24 +78,32 @@ void subdivide(common::MyMesh& mesh)
         }
 
 
+
+
         auto new_vertex = mesh.split(original_edge_h, mesh.calc_edge_midpoint(original_edge_h));
-        
-        if (face1.is_valid()) {
-            if (face_memory.count(face1) == 0) {
-                face_memory.insert({face1, findEdgeConnectingVertices(mesh, opposite_vertex1, new_vertex)});
+
+        new_vertices.push_back(new_vertex);
+
+        if(face1.is_valid()){
+            if(std::find(new_vertices.begin(), new_vertices.end(), opposite_vertex1) == new_vertices.end()){
+                flippable_edges.push_back(findEdgeConnectingVertices(mesh, new_vertex, opposite_vertex1));     
+
             }
         }
 
-        if (face2.is_valid()) {
-            if (face_memory.count(face2) == 0) {
-                face_memory.insert({face2, findEdgeConnectingVertices(mesh, opposite_vertex2, new_vertex)});
+        if(face2.is_valid()){
+            if(std::find(new_vertices.begin(), new_vertices.end(), opposite_vertex2) == new_vertices.end()){
+                flippable_edges.push_back(findEdgeConnectingVertices(mesh, new_vertex, opposite_vertex2));     
+
             }
-        }        
+        }
     }
 
-    for (auto& face_and_edge : face_memory) {
-        std::cout<<"Flip"<<std::endl;
-        //mesh.flip(face_and_edge.second);
+    for (auto& flippable_edge : flippable_edges) {
+
+
+            mesh.flip(flippable_edge);
+
     }
 }
 
@@ -121,8 +119,35 @@ void iterateVertex(common::MyMesh& mesh, const common::MyMesh::VertexHandle& ite
 
 void DiscreteFairer::execute(common::MyMesh& mesh, size_t face_split_count, size_t iteration_count)
 {
-    CurvatureCalculator cc(mesh);
-    subdivide(mesh);
+        subdivide(mesh);
+                subdivide(mesh);
+
+
+return;
+
+    std::vector<common::MyMesh::VertexHandle> original_vertices;
+
+    for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
+    {
+        original_vertices.push_back(*v_it);
+    }
+
+    CurvatureCalculator cc(mesh); //TODO: only calculate it in the original vertices
+
+    for(size_t i = 0; i < face_split_count; i++) {
+        subdivide(mesh);
+    }
+
+    for(size_t i = 0; i < iteration_count; i++) {
+        
+        for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
+        {
+            auto vh = *v_it;
+            if(std::find(original_vertices.begin(), original_vertices.end(), vh) == original_vertices.end()) {
+                iterateVertex(mesh, vh);
+            }
+        }
+    }
 
 /*
     OpenMesh::VPropHandleT<double> doubleValues;
