@@ -119,40 +119,13 @@ void iterateVertex(common::MyMesh& mesh, const common::MyMesh::VertexHandle& ite
 
 void DiscreteFairer::execute(common::MyMesh& mesh, size_t face_split_count, size_t iteration_count)
 {
-        subdivide(mesh);
-                subdivide(mesh);
+        //subdivide(mesh);
+        //subdivide(mesh);
 
-
-return;
-
-    std::vector<common::MyMesh::VertexHandle> original_vertices;
-
-    for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
-    {
-        original_vertices.push_back(*v_it);
-    }
-
-    CurvatureCalculator cc(mesh); //TODO: only calculate it in the original vertices
-
-    for(size_t i = 0; i < face_split_count; i++) {
-        subdivide(mesh);
-    }
-
-    for(size_t i = 0; i < iteration_count; i++) {
-        
-        for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
-        {
-            auto vh = *v_it;
-            if(std::find(original_vertices.begin(), original_vertices.end(), vh) == original_vertices.end()) {
-                iterateVertex(mesh, vh);
-            }
-        }
-    }
-
-/*
     OpenMesh::VPropHandleT<double> doubleValues;
     mesh.add_property(doubleValues, "doubleValues");
 
+    CurvatureCalculator cc(mesh); //TODO: only calculate it in the original vertices
     for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
     {
         common::MyMesh::VertexHandle vh = *v_it;
@@ -161,11 +134,6 @@ return;
 
         mesh.property(doubleValues, vh) = cc.getCurvature();
     }
-*/
-
-
-
-    return;
 
 }
 

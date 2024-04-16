@@ -8,7 +8,7 @@
 Canvas::Canvas(QWidget *parent) : QOpenGLWidget(parent)
 {
     
-  printable_mesh = object_loader.loadFromFile("input3.stl");
+  printable_mesh = object_loader.loadFromFile("input1.obj");
 
 
 }
@@ -112,7 +112,7 @@ void Canvas::setPrintable(const common::MyMesh* const _printable_mesh)
 
 void Canvas::setCurvaturToHueAttributes(const common::MyMesh& mesh, double outlier)
 {
-  return;
+  
   std::vector<double> curvatures;
   for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
   {
@@ -203,18 +203,18 @@ std::vector<Canvas::qGlVertex> Canvas::printableMeshToTriangles() const
 
           double color = 0;
           bool has_curvature = false;
-/*
+
           OpenMesh::VPropHandleT<double> myprop;
           if(printable_mesh->get_property_handle(myprop, "doubleValues")){
             color = printable_mesh->property(myprop, vh);
             has_curvature = true;
           }
-*/
+
           
           const auto rgb_curvature = has_curvature ? common::color::hsvToRgb({color / hue_divider + hue_offset, 1.0, 1.0}) : Eigen::Vector3d(0.0, 0.0, 0.0);
 
 
-          retval.push_back({{vertex_position[0], vertex_position[1], vertex_position[2]}, {rgb_curvature[0], rgb_curvature[1], rgb_curvature[2]}});
+          retval.push_back({{vertex_position[0], vertex_position[1], vertex_position[2]}, {static_cast<float>(rgb_curvature[0]), static_cast<float>(rgb_curvature[1]), static_cast<float>(rgb_curvature[2])}});
       }
   }
 
@@ -255,7 +255,9 @@ void Canvas::paintGL()
         q_m(i, j) = static_cast<float>(m(i, j));
       }
     }
-
+    setCurvaturToHueAttributes(*printable_mesh, 0.8);
+    std::vector<qGlVertex> pp = printableMeshToTriangles();
+/*
     sp->bind();
     sp->setUniformValue("V", q_v);
     sp->setUniformValue("P", q_p);
@@ -267,8 +269,6 @@ void Canvas::paintGL()
     vao.bind();
     vbo.bind();
 
-    setCurvaturToHueAttributes(*printable_mesh);
-    std::vector<qGlVertex> pp = printableMeshToTriangles();
     const void *printable_data = pp.data();
 
     vbo.allocate(printable_data, sizeof(qGlVertex) * pp.size());
@@ -279,9 +279,10 @@ void Canvas::paintGL()
     sp->setAttributeBuffer(0, GL_FLOAT, offsetof(qGlVertex, position), 3, sizeof(qGlVertex));
     sp->setAttributeBuffer(1, GL_FLOAT, offsetof(qGlVertex, color), 3, sizeof(qGlVertex));
 
+*/
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+/*
     glDrawArrays(GL_TRIANGLES, 0, pp.size());
 
   ////////////////
@@ -300,6 +301,28 @@ void Canvas::paintGL()
     sp->setAttributeBuffer(0, GL_FLOAT, offsetof(qGlVertex, position), 3, sizeof(qGlVertex));
     sp->setAttributeBuffer(1, GL_FLOAT, offsetof(qGlVertex, color), 3, sizeof(qGlVertex));
     glDrawArrays(GL_LINES, 0, edgpoints.size());
+
+
+    glLineWidth(0.1f);
+    glBegin(GL_LINES);
+    for(const auto& line : edgpoints) {
+      Eigen::Vector4d c_pos = p*v*m *  Eigen::Vector4d(line.position[0], line.position[1], line.position[2], 1.0);
+      c_pos = c_pos/ c_pos[3];
+      glColor3f(1.0, 1.0, 1.0);
+      glVertex3f(c_pos[0], c_pos[1], c_pos[2] - 0.01f);
+    }
+    glEnd();
+*/
+
+
+    glBegin(GL_TRIANGLES);
+    for(const auto& side : pp) {
+      Eigen::Vector4d c_pos = p*v*m *  Eigen::Vector4d(side.position[0], side.position[1], side.position[2], 1.0);
+      c_pos = c_pos/ c_pos[3];
+      glColor3f(side.color[0], side.color[1], side.color[2]);
+      glVertex3f(c_pos[0], c_pos[1], c_pos[2]);
+    }
+    glEnd();
 
 }
 

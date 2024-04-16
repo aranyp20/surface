@@ -83,20 +83,6 @@ void aaaaa(common::MyMesh& mesh)
   common::MyMesh::FaceHandle f0 = mesh.add_face(v0, v1, v2);
 
 return;
-  std::vector<common::MyMesh::FaceHandle> original_faces = {f0};
-
-  common::MyMesh::EdgeHandle e1 = mesh.edge_handle(mesh.find_halfedge(v1, v2)); // Edge AB
-  auto v3 = mesh.split(e1, mesh.calc_edge_midpoint(e1));
-
-  mesh.delete_face(f0);
-
-  for (common::MyMesh::FaceIter f_it = mesh.faces_begin(); f_it != mesh.faces_end(); ++f_it)
-  {
-      common::MyMesh::FaceHandle fh = *f_it;
-
-      std::cout<<"alma "<<(fh == original_faces[0])<<std::endl;
-  }
-
 
 /*
   // Add the original triangle face
