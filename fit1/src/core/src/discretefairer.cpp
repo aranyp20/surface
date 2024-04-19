@@ -10,7 +10,6 @@ namespace core {
 namespace {
 
 
-
 common::MyMesh::EdgeHandle findEdgeConnectingVertices(common::MyMesh& mesh, common::MyMesh::VertexHandle v1, common::MyMesh::VertexHandle v2) {
     for (common::MyMesh::ConstEdgeIter e_it = mesh.edges_begin(); e_it != mesh.edges_end(); ++e_it) {
         common::MyMesh::HalfedgeHandle heh0 = mesh.halfedge_handle(*e_it, 0);
@@ -25,7 +24,9 @@ common::MyMesh::EdgeHandle findEdgeConnectingVertices(common::MyMesh& mesh, comm
     // If no such edge found, return an invalid handle
     return common::MyMesh::EdgeHandle();
 }
-
+   
+  std::map<common::MyMesh::VertexHandle, std::vector<common::MyMesh::VertexHandle>> child_parent_map; 
+  
 void subdivide(common::MyMesh& mesh)
 {
     std::vector<common::MyMesh::EdgeHandle> original_edges;
@@ -52,7 +53,6 @@ void subdivide(common::MyMesh& mesh)
 
         common::MyMesh::VertexHandle opposite_vertex1;
         common::MyMesh::VertexHandle opposite_vertex2;
-
 
 
         if (face1.is_valid()) {
@@ -83,6 +83,13 @@ void subdivide(common::MyMesh& mesh)
         auto new_vertex = mesh.split(original_edge_h, mesh.calc_edge_midpoint(original_edge_h));
 
         new_vertices.push_back(new_vertex);
+
+	// mapping
+
+	
+	
+	//
+	
 
         if(face1.is_valid()){
             if(std::find(new_vertices.begin(), new_vertices.end(), opposite_vertex1) == new_vertices.end()){
@@ -148,12 +155,5 @@ Eigen::Vector3d DiscreteFairer::Q(const std::array<Eigen::Vector3d, 6>& p,const 
 
     return p_k + normal * t;
 }
-
-
-
-
-
-
-
 
 }
