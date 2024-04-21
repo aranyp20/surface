@@ -24,9 +24,13 @@ common::MyMesh::EdgeHandle findEdgeConnectingVertices(common::MyMesh& mesh, comm
     // If no such edge found, return an invalid handle
     return common::MyMesh::EdgeHandle();
 }
-   
-  std::map<common::MyMesh::VertexHandle, std::vector<common::MyMesh::VertexHandle>> child_parent_map; 
+
+
+  // Vertexhandle not present as child in this map must be original vertices
+  //TODO not global!!
+  std::map<common::MyMesh::VertexHandle, std::array<common::MyMesh::VertexHandle,2>> child_parents_map; 
   
+  //TODO refactor
 void subdivide(common::MyMesh& mesh)
 {
     std::vector<common::MyMesh::EdgeHandle> original_edges;
@@ -84,11 +88,7 @@ void subdivide(common::MyMesh& mesh)
 
         new_vertices.push_back(new_vertex);
 
-	// mapping
-
-	
-	
-	//
+	child_parents_map.insert({new_vertex, {v1, v2}});
 	
 
         if(face1.is_valid()){
@@ -113,21 +113,84 @@ void subdivide(common::MyMesh& mesh)
 
     }
 }
+  
+  void getEffectorsHelper(const common::MyMesh::VertexHandle& to, std::set<common::MyMesh::VertexHandle>& visited_vertices, std::set<common::MyMesh::VertexHandle>& effectors)
+  {
+    if(child_parents_map.count(to) == 0) {
+      // Original vertex
+      effectors.insert(to);
+      return;
+    }
 
+    visited_vertices.insert(to);
+    
+    const auto& parents = child_parents_map.at(to);
 
-void iterateVertex(common::MyMesh& mesh, const common::MyMesh::VertexHandle& iteratable)
+    for(size_t i = 0; i < 2; i++){
+      if(std::find(visited_vertices.begin(), visited_vertices.end(), parents[i]) == visited_vertices.end()){
+	getEffectorsHelper(parents[i], visited_vertices, effectors);
+      }
+    }    
+    
+  }
+
+  std::set<common::MyMesh::VertexHandle> getEffectors(const common::MyMesh::VertexHandle& to)
+  {
+    std::set<common::MyMesh::VertexHandle> result;
+    std::set<common::MyMesh::VertexHandle> tmp_visited_vertices;
+
+    getEffectorsHelper(to, tmp_visited_vertices, result);
+
+    return result;
+  }
+
+  std::map<common::MyMesh::VertexHandle, double> vertex_curvature_map;
+  
+  Eigen::Vector3d iterateVertex(const common::MyMesh& mesh, const common::MyMesh::VertexHandle& iteratable)
 {
-
+  return {};
 }
 
 
-}
+} // namespace
 
 
 void DiscreteFairer::execute(common::MyMesh& mesh, size_t face_split_count, size_t iteration_count)
 {
-        //subdivide(mesh);
-        //subdivide(mesh);
+  // Subdivide the base mesh
+  // child_parents_map is filled
+  for(size_t i = 0; i < face_split_count; i++) {
+    subdivide(mesh);
+  }
+
+
+  // Calculate the curvature for each vertex at the beginning of each iteration
+  CurvatureCalculator mcc(mesh);
+  //TODO range operator (smarthandle....)
+  for(common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it){
+    auto vh = *v_it;
+    mcc.execute(vh);
+    const auto curvature = mcc.getCurvature();
+    vertex_curvature_map.insert({vh, curvature});
+  }
+
+  // Calculate the new position of each vertices
+  std::vector<std::pair<common::MyMesh::VertexHandle, Eigen::Vector3d>> new_vertex_positions;
+  for(common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it){
+    auto vh = *v_it;
+    new_vertex_positions.emplace_back(vh, iterateVertex(mesh, vh));
+  }
+
+  // Replace each vertex to its new position
+  for (auto& vertex_with_new_pos : new_vertex_positions) {
+    // TODO: conversion in common (new file for all of these)
+    const auto& new_pos_e = vertex_with_new_pos.second;
+    common::MyMesh::Point new_pos(new_pos_e[0], new_pos_e[1], new_pos_e[2]);
+    mesh.point(vertex_with_new_pos.first) = new_pos;
+  }
+  
+  return;
+    
 
     OpenMesh::VPropHandleT<double> doubleValues;
     mesh.add_property(doubleValues, "doubleValues");

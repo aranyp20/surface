@@ -8,7 +8,7 @@
 Canvas::Canvas(QWidget *parent) : QOpenGLWidget(parent)
 {
     
-  printable_mesh = object_loader.loadFromFile("input1.obj");
+  printable_mesh = object_loader.loadFromFile("input3.stl");
 
 
 }
@@ -112,7 +112,6 @@ void Canvas::setPrintable(const common::MyMesh* const _printable_mesh)
 
 void Canvas::setCurvaturToHueAttributes(const common::MyMesh& mesh, double outlier)
 {
-  
   std::vector<double> curvatures;
   for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
   {
@@ -123,10 +122,15 @@ void Canvas::setCurvaturToHueAttributes(const common::MyMesh& mesh, double outli
     if(!printable_mesh->get_property_handle(myprop, "doubleValues")){
       std::cout<<"Prop not found."<<std::endl;
     }
+    else {
+      curvatures.push_back(printable_mesh->property(myprop, vh));
+    }
     
-    curvatures.push_back(printable_mesh->property(myprop, vh));
   }
 
+  if(curvatures.empty())
+    return;
+  
   std::sort(curvatures.begin(), curvatures.end());
 
   const auto start_rate = (1 - outlier) / 2;
@@ -203,12 +207,13 @@ std::vector<Canvas::qGlVertex> Canvas::printableMeshToTriangles() const
 
           double color = 0;
           bool has_curvature = false;
-
+	    
           OpenMesh::VPropHandleT<double> myprop;
           if(printable_mesh->get_property_handle(myprop, "doubleValues")){
             color = printable_mesh->property(myprop, vh);
             has_curvature = true;
           }
+	 
 
           
           const auto rgb_curvature = has_curvature ? common::color::hsvToRgb({color / hue_divider + hue_offset, 1.0, 1.0}) : Eigen::Vector3d(0.0, 0.0, 0.0);
