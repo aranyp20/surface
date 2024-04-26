@@ -1,5 +1,6 @@
 #include "discretefairer.h"
 #include <OpenMesh/Tools/Subdivider/Uniform/MidpointT.hh>
+#include <OpenMesh/Core/IO/MeshIO.hh>
 #include "organize.hpp"
 #include <unordered_map>
 #include <optional>
@@ -25,6 +26,7 @@ common::MyMesh::EdgeHandle findEdgeConnectingVertices(common::MyMesh& mesh, comm
     return common::MyMesh::EdgeHandle();
 }
 
+ 
 
   // Vertexhandle not present as child in this map must be original vertices
   //TODO not global!!
@@ -144,11 +146,83 @@ void subdivide(common::MyMesh& mesh)
     return result;
   }
 
+
+  // TODO: optimize
+  bool isOriginalVertex(const common::MyMesh::VertexHandle& vh)
+  {
+    return getEffectors(vh).size() == 1;
+  }
+  
+  
   std::map<common::MyMesh::VertexHandle, double> vertex_curvature_map;
   
-  Eigen::Vector3d iterateVertex(const common::MyMesh& mesh, const common::MyMesh::VertexHandle& iteratable)
+  Eigen::Vector3d iterateVertex(common::MyMesh& mesh, common::MyMesh::VertexHandle& iteratable)
 {
-  return {};
+
+  auto effectors = getEffectors(iteratable);
+
+  //std::cout<<"Effectors size: "<< effectors.size()<<std::endl;
+
+  std::vector<common::MyMesh::VertexHandle> neighbors;
+  for (common::MyMesh::ConstVertexVertexIter vv_it = mesh.cvv_begin(iteratable); vv_it != mesh.cvv_end(iteratable); ++vv_it)
+  {
+    neighbors.push_back(*vv_it);
+  }
+  //std::cout<<"Neighbors size: "<<neighbors.size()<<std::endl;
+  
+  
+  std::array<Eigen::Vector3d, 6> e_neighbors;
+  for(size_t i = 0; i< 6; i++){
+    const auto& p = mesh.point(neighbors[i]);
+    e_neighbors[i] =  Eigen::Vector3d(p[0], p[1], p[2]);
+  }
+  
+
+  CurvatureCalculator cc(mesh);
+  cc.execute(iteratable);
+  const auto normal = cc.getNormal();
+  const auto fe = cc.getFundamentalElements();
+
+  double H;
+  if(effectors.size() == 2) {
+    std::vector<common::MyMesh::VertexHandle> t_effectors;
+    for(const auto& a : effectors) {
+      t_effectors.push_back(a);
+    }
+    const auto p0 = mesh.point(iteratable);
+    const auto p1 = mesh.point(t_effectors[0]);
+    const auto p2 = mesh.point(t_effectors[1]);
+    auto d1 = (p0 - p1).norm();
+    auto d2 = (p0 - p2).norm();
+    const auto normalizer = d2 + d1;
+    d1 = d1 / normalizer;
+    d2 = d2 / normalizer;
+    H = vertex_curvature_map.at(t_effectors[0]) * d1 + vertex_curvature_map.at(t_effectors[1]) * d2;
+  }
+  else if (effectors.size() == 3) {
+    std::vector<common::MyMesh::VertexHandle> t_effectors;
+    for(const auto& a : effectors) {
+      t_effectors.push_back(a);
+    }
+    const auto p0 = mesh.point(iteratable);
+    const auto p1 = mesh.point(t_effectors[0]);
+    const auto p2 = mesh.point(t_effectors[1]);
+    const auto p3 = mesh.point(t_effectors[2]);
+    auto d1 = (p0 - p1).norm();
+    auto d2 = (p0 - p2).norm();
+    auto d3 = (p0 - p3).norm();
+    const auto normalizer = d3 + d2 + d1;
+    d1 = d1 / normalizer;
+    d2 = d2 / normalizer;
+    d3 = d3 / normalizer;
+    H = vertex_curvature_map.at(t_effectors[0]) * d1 + vertex_curvature_map.at(t_effectors[1]) * d2 + vertex_curvature_map.at(t_effectors[2]) * d3;
+  }
+  else {
+    std::cout<<"Vertex iterate invalid effectors count."<<std::endl;
+  }
+
+  return DiscreteFairer::Q(e_neighbors, normal, H, fe);
+  
 }
 
 
@@ -160,36 +234,40 @@ void DiscreteFairer::execute(common::MyMesh& mesh, size_t face_split_count, size
   // Subdivide the base mesh
   // child_parents_map is filled
   for(size_t i = 0; i < face_split_count; i++) {
-    subdivide(mesh);
+    //subdivide(mesh);
+    
   }
 
+  for(size_t i = 0; i < 0 ; i++){
+    // Calculate the curvature for each vertex at the beginning of each iteration
+    CurvatureCalculator mcc(mesh);
+    //TODO range operator (smarthandle....)
+    for(common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it){
+      auto vh = *v_it;
+      mcc.execute(vh);
+      const auto curvature = mcc.getCurvature();
+      vertex_curvature_map[vh] =  curvature;
+    }
+    // Calculate the new position of each new vertex
+    std::vector<std::pair<common::MyMesh::VertexHandle, Eigen::Vector3d>> new_vertex_positions;
+    for(common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it){
+      auto vh = *v_it;
+      if (!isOriginalVertex(vh)) {
+	new_vertex_positions.emplace_back(vh, iterateVertex(mesh, vh));
+      }
+    }
+    // Replace each vertex to its new position
+    for (auto& vertex_with_new_pos : new_vertex_positions) {
+      // TODO: conversion in common (new file for all of these)
+      const auto& new_pos_e = vertex_with_new_pos.second;
+      common::MyMesh::Point new_pos(new_pos_e[0], new_pos_e[1], new_pos_e[2]);
+      mesh.point(vertex_with_new_pos.first) = new_pos;
+    }
 
-  // Calculate the curvature for each vertex at the beginning of each iteration
-  CurvatureCalculator mcc(mesh);
-  //TODO range operator (smarthandle....)
-  for(common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it){
-    auto vh = *v_it;
-    mcc.execute(vh);
-    const auto curvature = mcc.getCurvature();
-    vertex_curvature_map.insert({vh, curvature});
   }
 
-  // Calculate the new position of each vertices
-  std::vector<std::pair<common::MyMesh::VertexHandle, Eigen::Vector3d>> new_vertex_positions;
-  for(common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it){
-    auto vh = *v_it;
-    new_vertex_positions.emplace_back(vh, iterateVertex(mesh, vh));
-  }
+  OpenMesh::IO::write_mesh(mesh, "result.obj");
 
-  // Replace each vertex to its new position
-  for (auto& vertex_with_new_pos : new_vertex_positions) {
-    // TODO: conversion in common (new file for all of these)
-    const auto& new_pos_e = vertex_with_new_pos.second;
-    common::MyMesh::Point new_pos(new_pos_e[0], new_pos_e[1], new_pos_e[2]);
-    mesh.point(vertex_with_new_pos.first) = new_pos;
-  }
-  
-  return;
     
 
     OpenMesh::VPropHandleT<double> doubleValues;
@@ -201,13 +279,14 @@ void DiscreteFairer::execute(common::MyMesh& mesh, size_t face_split_count, size
         common::MyMesh::VertexHandle vh = *v_it;
 
         cc.execute(vh);
-
+	std::cout<<cc.getFundamentalElements()<<std::endl;
+	
         mesh.property(doubleValues, vh) = cc.getCurvature();
     }
 
 }
 
-Eigen::Vector3d DiscreteFairer::Q(const std::array<Eigen::Vector3d, 6>& p,const Eigen::Vector3d& normal, double H,  const CurvatureCalculator::FundamentalElements& fe) const
+Eigen::Vector3d DiscreteFairer::Q(const std::array<Eigen::Vector3d, 6>& p,const Eigen::Vector3d& normal, double H,  const CurvatureCalculator::FundamentalElements& fe)
 {
 
     const auto p_k = common::average(p[0], p[1], p[2], p[3], p[4], p[5]);

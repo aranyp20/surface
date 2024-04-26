@@ -8,7 +8,7 @@
 Canvas::Canvas(QWidget *parent) : QOpenGLWidget(parent)
 {
     
-  printable_mesh = object_loader.loadFromFile("input3.stl");
+  printable_mesh = object_loader.loadFromFile("input5.obj");
 
 
 }
@@ -120,7 +120,7 @@ void Canvas::setCurvaturToHueAttributes(const common::MyMesh& mesh, double outli
 
     OpenMesh::VPropHandleT<double> myprop;
     if(!printable_mesh->get_property_handle(myprop, "doubleValues")){
-      std::cout<<"Prop not found."<<std::endl;
+      //std::cout<<"Prop not found."<<std::endl;
     }
     else {
       curvatures.push_back(printable_mesh->property(myprop, vh));
@@ -287,12 +287,12 @@ void Canvas::paintGL()
 */
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    std::vector<qGlVertex> edgpoints = printableMeshToLines();
 /*
     glDrawArrays(GL_TRIANGLES, 0, pp.size());
 
   ////////////////
 
-    std::vector<qGlVertex> edgpoints = printableMeshToLines();
     const void *printable_data2 = edgpoints.data();
 
     vbo.allocate(printable_data2, sizeof(qGlVertex) * edgpoints.size());
@@ -308,6 +308,7 @@ void Canvas::paintGL()
     glDrawArrays(GL_LINES, 0, edgpoints.size());
 
 
+*/
     glLineWidth(0.1f);
     glBegin(GL_LINES);
     for(const auto& line : edgpoints) {
@@ -317,7 +318,6 @@ void Canvas::paintGL()
       glVertex3f(c_pos[0], c_pos[1], c_pos[2] - 0.01f);
     }
     glEnd();
-*/
 
 
     glBegin(GL_TRIANGLES);

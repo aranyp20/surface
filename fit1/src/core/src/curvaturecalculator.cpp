@@ -195,6 +195,8 @@ namespace core
 
     void CurvatureCalculator::execute(const Eigen::Vector3d vertex_pos, const std::vector<Eigen::Vector3d>& neighbors)
     {
+      std::cout<<"Execute"<<std::endl;
+      
         InputPoints cip;
         cip.center = Eigen::Vector3d(vertex_pos[0], vertex_pos[1], vertex_pos[2]);
         for (const auto& neighbor_pos : neighbors)

@@ -65,7 +65,7 @@ void ObjectLoader::modelToShow(common::MyMesh& mesh) const
 
 void ObjectLoader::preprocessMesh(common::MyMesh& mesh) const
 {
-  modelToShow(mesh);
+  //modelToShow(mesh); TODOcheck
 
   
   core::DiscreteFairer df;
