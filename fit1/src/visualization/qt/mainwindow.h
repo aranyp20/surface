@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "objectloader.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -18,6 +19,8 @@ public:
 private:
     Ui::MainWindow *ui;
 
+    framework::ObjectLoader object_loader;
+		      
 public slots:
 
     void yawPlus();
@@ -26,6 +29,8 @@ public slots:
     void pitchMinus();
     void rollPlus();
     void rollMinus();
+  void setHighlightEdges(int status);
+  void changeLoadedModel(int index);
 
 };
 #endif // MAINWINDOW_H

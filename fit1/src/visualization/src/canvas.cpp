@@ -7,9 +7,7 @@
 
 Canvas::Canvas(QWidget *parent) : QOpenGLWidget(parent)
 {
-    
-  printable_mesh = object_loader.loadFromFile("input5.obj");
-
+   
 
 }
 
@@ -54,6 +52,11 @@ void Canvas::changePitch(double diff)
 void Canvas::changeRoll(double diff)
 {
   model_roll += diff;
+}
+
+void Canvas::setHighlightEdges(bool status)
+{
+  highlight_edges = status;
 }
 
 void Canvas::initializeGL()
@@ -103,10 +106,10 @@ void Canvas::initializeGL()
 }
 
 
-//TODO depr.
-void Canvas::setPrintable(const common::MyMesh* const _printable_mesh)
+
+void Canvas::setPrintable(const std::shared_ptr<common::MyMesh> _printable_mesh)
 {
-  //printable_mesh = _printable_mesh;
+  printable_mesh = _printable_mesh;
 }
 
 
@@ -309,16 +312,17 @@ void Canvas::paintGL()
 
 
 */
-    glLineWidth(0.1f);
-    glBegin(GL_LINES);
-    for(const auto& line : edgpoints) {
-      Eigen::Vector4d c_pos = p*v*m *  Eigen::Vector4d(line.position[0], line.position[1], line.position[2], 1.0);
-      c_pos = c_pos/ c_pos[3];
-      glColor3f(1.0, 1.0, 1.0);
-      glVertex3f(c_pos[0], c_pos[1], c_pos[2] - 0.01f);
+    if (highlight_edges) {      
+      glLineWidth(0.1f);
+      glBegin(GL_LINES);
+      for(const auto& line : edgpoints) {
+	Eigen::Vector4d c_pos = p*v*m *  Eigen::Vector4d(line.position[0], line.position[1], line.position[2], 1.0);
+	c_pos = c_pos/ c_pos[3];
+	glColor3f(1.0, 1.0, 1.0);
+	glVertex3f(c_pos[0], c_pos[1], c_pos[2] - 0.01f);
+      }
+      glEnd();
     }
-    glEnd();
-
 
     glBegin(GL_TRIANGLES);
     for(const auto& side : pp) {

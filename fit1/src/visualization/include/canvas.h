@@ -43,11 +43,13 @@ public:
 
   virtual ~Canvas();
 
-  void setPrintable(const common::MyMesh* const _printable_mesh);
+  void setPrintable(const std::shared_ptr<common::MyMesh> _printable_mesh);
 
   void changeYaw(double diff);
   void changePitch(double diff);
   void changeRoll(double diff);
+
+  void setHighlightEdges(bool state);
 
 protected:
 
@@ -62,8 +64,6 @@ protected:
   void mouseMoveEvent(QMouseEvent *event)override;
 
 private:
-
-  framework::ObjectLoader object_loader; //TODO replace
 
   std::shared_ptr<const common::MyMesh> printable_mesh = nullptr;
   double model_yaw = 0;
@@ -80,6 +80,8 @@ private:
   std::vector<qGlVertex> printableMeshToTriangles() const; //faces
   std::vector<qGlVertex> printableMeshToLines() const; //edges
 
+
+  bool highlight_edges = false;
 };
 
 

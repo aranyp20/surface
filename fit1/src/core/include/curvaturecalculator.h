@@ -16,7 +16,7 @@ namespace core
     {
 
         struct SurfaceParam
-        {
+	{
             double u = 0;
             double v = 0;
         };
@@ -46,6 +46,8 @@ namespace core
         
         
         //void calcCurvatures(common::MyMesh &mesh) const;
+      void tessellateSurface(const size_t resolution, DerResults Ss, std::string path) const;
+
 
     public:
         struct FundamentalElements

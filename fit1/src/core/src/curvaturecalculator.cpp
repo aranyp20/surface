@@ -1,10 +1,81 @@
 #include "curvaturecalculator.h"
 
+
+namespace core{
+  size_t dcallnum = 0;
+
+  void CurvatureCalculator::tessellateSurface(const size_t resolution, DerResults Ss, std::string path) const
+        {
+
+    #define uvBOUND 20
+
+            const double u_min = -uvBOUND;
+            const double u_max = uvBOUND;
+            const double v_min = -uvBOUND;
+            const double v_max = uvBOUND;
+
+            const double u_step_distance = (u_max - u_min) / resolution;
+            const double v_step_distance = (v_max - v_min) / resolution;
+
+            std::vector<Eigen::Vector3d> values;
+            for (size_t i = 0; i < resolution; i++)
+            {
+                const double u = u_min + i * u_step_distance;
+                for (size_t j = 0; j < resolution; j++)
+                {
+                    const double v = v_min + j * v_step_distance;
+                    values.push_back(S(u, v, Ss));
+                }
+            }
+
+            // TODO refactor
+
+            std::fstream fw("tessellated-" + std::to_string(++dcallnum) + ".obj", std::ios::out);
+
+            fw << "# Vertices\n";
+
+            for (const auto &vertex : values)
+            {
+                fw << "v " << vertex[0] << " " << vertex[1] << " " << vertex[2] << std::endl;
+            }
+
+            fw << "\n# Faces\n";
+
+            for (size_t i = 0; i < (resolution - 1) * (resolution - 1); i++)
+            {
+                const size_t left_right_index = std::floor(i / (resolution - 1)) + i;
+
+                fw << "f " << left_right_index + 1 << " " << left_right_index + resolution + 1 << " " << left_right_index + resolution + 2 << std::endl;
+                fw << "f " << left_right_index + 1 << " " << left_right_index + resolution + 2 << " " << left_right_index + 2 << std::endl;
+            }
+
+        }
+  
+}
+
 namespace core
 {
+  
     // TODO before integrated: cps.P size check + origo center precondition
     std::vector<CurvatureCalculator::SurfaceParam> CurvatureCalculator::InputPoints::calcUVs() const
     {
+
+      
+      std::vector<SurfaceParam> result;
+
+      for(size_t i=0; i< P.size(); i++) {
+	const auto tt = 2 * M_PI * (static_cast<double>(i)/P.size());
+	result.push_back({std::cos(tt), std::sin(tt)});
+      }
+      //C-h i
+      //C-g
+
+      return result;
+      
+
+
+      
+        std::cout<<"UVS  start"<<std::endl;
         std::vector<SurfaceParam> retval;
 
         // retval.push_back({0, 0});
@@ -14,10 +85,13 @@ namespace core
         for (size_t i = 0; i < P.size(); i++)
         {
             const auto &p_i = P[i];
+	    std::cout<<"@"<<p_i<<std::endl;
             const auto &p_i_next = i == P.size() - 1 ? P[0] : P[i + 1];
+	    std::cout<<p_i_next<<std::endl;
             const auto alpha = std::acos(p_i.normalized().dot(p_i_next.normalized()));
             alphas.push_back(alpha);
             alpha_sum += alpha;
+            std::cout<<"alpha: "<<alpha<<std::endl;
         }
 
         const auto alpha_normalizer = 2 * M_PI / alpha_sum;
@@ -25,22 +99,24 @@ namespace core
         {
             alpha *= alpha_normalizer;
         }
+	std::cout<<"alpha normalizer: "<<alpha_normalizer<<std::endl;
 
         for (size_t i = 0; i < P.size(); i++)
         {
             const auto h_i = P[i].norm();
-
             double sum_a = 0;
-            if (i != 0)
+            
             {
                 for (size_t j = 0; j < i; j++)
                 {
                     sum_a += alphas[j];
                 }
             }
-
+            std::cout<<"Sum_a: "<<sum_a<<std::endl;
+	    std::cout<<"h_i: "<<h_i<<std::endl;
             retval.push_back({h_i * std::cos(sum_a), h_i * std::sin(sum_a)});
         }
+        std::cout<<"Uvs end"<<std::endl;
 
         return retval;
     }
@@ -60,7 +136,12 @@ namespace core
 
     CurvatureCalculator::DerResults CurvatureCalculator::calcDer(const InputPoints &ipp) const
     {
+        std::cout<<"calcDer"<<std::endl;
         const auto uvs = ipp.calcUVs();
+        for(const auto& a : uvs) {
+	  std::cout<<"u and v: "<< a.u << " " <<a.v<<std::endl;
+        }
+
 
         const auto res_size = 5;
         Eigen::MatrixXd A = Eigen::MatrixXd::Random(uvs.size(), res_size);
@@ -94,6 +175,9 @@ namespace core
             b = A.transpose() * (A * A.transpose()).inverse() * c;
         }
 
+	//tessellateSurface(100, {b.row(0), b.row(1), b.row(2), b.row(3), b.row(4)}, std::string("t1.obj"));
+
+        std::cout<<"calcEnd"<<std::endl;
         return {b.row(0), b.row(1), b.row(2), b.row(3), b.row(4)};
     }
 
@@ -109,6 +193,7 @@ namespace core
         const auto ip = ipp.translatePoints();
 
         const auto eq = calcDer(ip);
+        std::cout<<eq.Su<<" "<< eq.Sv<<" "<< eq.Suu<< " "<<eq.Suv << " "<< eq.Svv<<std::endl;
 
         fundamental_elements.E = eq.Su.norm() * eq.Su.norm();
         fundamental_elements.G = eq.Sv.norm() * eq.Sv.norm();
@@ -178,19 +263,25 @@ namespace core
 
     void CurvatureCalculator::execute(common::MyMesh::VertexHandle &vh)
     {
+        std::cout<<"Call---------"<<std::endl;
         const common::MyMesh::Point& vertexPos = mesh.point(vh);
 
         InputPoints cip;
         cip.center = Eigen::Vector3d(vertexPos[0], vertexPos[1], vertexPos[2]);
+        std::cout<<cip.center<<std::endl;
+        std::cout<<"aaaaaa"<<std::endl;
         for (common::MyMesh::VertexOHalfedgeIter voh_it = mesh.voh_iter(vh); voh_it.is_valid(); ++voh_it)
         {
             common::MyMesh::VertexHandle neighborVh = mesh.to_vertex_handle(*voh_it);
 
             const auto neighborPos = mesh.point(neighborVh); // TODO ref?
+
             cip.P.emplace_back(neighborPos[0], neighborPos[1], neighborPos[2]);
         }
 
+        std::cout<<"Inner"<<std::endl;
         calcCurvature(cip);
+        std::cout<<"curvature: "<<getCurvature()<<std::endl;
     }
 
     void CurvatureCalculator::execute(const Eigen::Vector3d vertex_pos, const std::vector<Eigen::Vector3d>& neighbors)

@@ -235,7 +235,7 @@ void DiscreteFairer::execute(common::MyMesh& mesh, size_t face_split_count, size
   // child_parents_map is filled
   for(size_t i = 0; i < face_split_count; i++) {
     //subdivide(mesh);
-    
+    //subdivide(mesh);
   }
 
   for(size_t i = 0; i < 0 ; i++){
@@ -279,8 +279,8 @@ void DiscreteFairer::execute(common::MyMesh& mesh, size_t face_split_count, size
         common::MyMesh::VertexHandle vh = *v_it;
 
         cc.execute(vh);
-	std::cout<<cc.getFundamentalElements()<<std::endl;
-	
+        
+
         mesh.property(doubleValues, vh) = cc.getCurvature();
     }
 

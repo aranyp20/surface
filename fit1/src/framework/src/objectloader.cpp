@@ -1,5 +1,6 @@
 #include "objectloader.h"
 #include <iostream>
+#include <filesystem>
 
 #include "discretefairer.h"
 
@@ -82,80 +83,11 @@ void aaaaa(common::MyMesh& mesh)
 
   common::MyMesh::FaceHandle f0 = mesh.add_face(v0, v1, v2);
 
-return;
-
-/*
-  // Add the original triangle face
-
-  // Split each edge of the original triangle
-
-  common::MyMesh::EdgeHandle e1 = mesh.edge_handle(mesh.find_halfedge(v1, v2)); // Edge BC
-  common::MyMesh::Point midpoint1 = (mesh.point(mesh.to_vertex_handle(mesh.find_halfedge(v1, v2))) + mesh.point(mesh.from_vertex_handle(mesh.find_halfedge(v1, v2)))) / 2.0;
-  common::MyMesh::VertexHandle v4 = mesh.split(e1, midpoint1); // E
-
-  common::MyMesh::EdgeHandle e2 = mesh.edge_handle(mesh.find_halfedge(v2, v0)); // Edge CA
-  common::MyMesh::Point midpoint2 = (mesh.point(mesh.to_vertex_handle(mesh.find_halfedge(v2, v0))) + mesh.point(mesh.from_vertex_handle(mesh.find_halfedge(v2, v0)))) / 2.0;
-
-  common::MyMesh::VertexHandle v5 = mesh.split(e2, midpoint2); // F
-
-  // Create new faces
-  mesh.add_face(v3, v4, v5); // ADB
-  mesh.add_face(v0, v3, v5); // BEC
-  mesh.add_face(v1, v3, v4); // CFA
-  mesh.add_face(v2, v4, v5); // DEF
-*/
-
-
-
-
-//  mesh.delete_face(*(mesh.faces_begin()), true);
-
-  // Remove the original triangle face
-  //mesh.delete_face(f0, false);
-
-
-  /*
-        common::MyMesh::VertexHandle v0 = mesh.add_vertex(common::MyMesh::Point(0, 0, 0)); // A
-      common::MyMesh::VertexHandle v1 = mesh.add_vertex(common::MyMesh::Point(1, 0, 0)); // B
-      common::MyMesh::VertexHandle v2 = mesh.add_vertex(common::MyMesh::Point(0.5, 1, 0)); // C
-
-      auto fo = mesh.add_face(v0, v1, v2);
-
-
-    for (common::MyMesh::FaceIter f_it = mesh.faces_begin(); f_it != mesh.faces_end(); ++f_it)
-    {
-        common::MyMesh::FaceHandle fh = *f_it;
-        
-
-        std::vector<common::MyMesh::EdgeHandle> ehs;
-        // Iterate through edges of the face
-        for (common::MyMesh::FaceEdgeIter fe_it = mesh.fe_iter(fh); fe_it.is_valid(); ++fe_it)
-        {
-            common::MyMesh::EdgeHandle eh = *fe_it;   
-        }
-
-        for (auto& eh : ehs) {
-
-            common::MyMesh::HalfedgeHandle heh = mesh.halfedge_handle(eh, 0); // get the halfedge handle
-            
-            // Get the midpoint of the edge
-            common::MyMesh::Point midpoint = (mesh.point(mesh.to_vertex_handle(heh)) + mesh.point(mesh.from_vertex_handle(heh))) / 2.0;
-
-            // Split the edge at the midpoint
-            common::MyMesh::VertexHandle new_vertex = mesh.split(eh, midpoint);
-            
-        }
-
-    }
-        mesh.delete_face(fo, true);
-        mesh.garbage_collection();
-  */
-
 }
 
 
 std::shared_ptr<common::MyMesh> ObjectLoader::loadFromFile(const std::string& path) const
-{
+{  
   common::MyMesh input_mesh;
 
   if (!OpenMesh::IO::read_mesh(input_mesh, path))
@@ -164,7 +96,6 @@ std::shared_ptr<common::MyMesh> ObjectLoader::loadFromFile(const std::string& pa
       return nullptr;
   }
   else {
-    //preprocessMesh(input_mesh);
 
     common::MyMesh mesh;
 
@@ -176,6 +107,30 @@ std::shared_ptr<common::MyMesh> ObjectLoader::loadFromFile(const std::string& pa
   }
 
   return nullptr;
+}
+
+
+
+  std::vector<std::string> ObjectLoader::loadFileOptions()
+  {
+    std::vector<std::string> retval;
+    
+    for (const auto& entry : std::filesystem::directory_iterator("./")) {
+      if (entry.path().extension() == ".obj") {
+        std::cout << entry.path() << std::endl;
+	retval.push_back(entry.path());
+      }
+    }
+
+    file_options = retval;
+    return retval;
+  }
+
+
+
+std::shared_ptr<common::MyMesh> ObjectLoader::loadFromFile(const size_t file_option_index) const
+{
+  return loadFromFile(file_options[file_option_index]);
 }
 
 
