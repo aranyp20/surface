@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "objectloader.h"
+#include "discretefairer.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -19,8 +20,13 @@ public:
 private:
     Ui::MainWindow *ui;
 
+  std::shared_ptr<common::MyMesh> m_mesh;
+
     framework::ObjectLoader object_loader;
-		      
+  core::DiscreteFairer discrete_fairer;
+
+  int df_subdivision_count = 0;
+  int df_iteration_count = 0;
 public slots:
 
     void yawPlus();
@@ -31,6 +37,10 @@ public slots:
     void rollMinus();
   void setHighlightEdges(int status);
   void changeLoadedModel(int index);
+
+  void performMethod();
+  void setDFSubdivisionCount(int n);
+  void setDFIterationCount(int n);
 
 };
 #endif // MAINWINDOW_H

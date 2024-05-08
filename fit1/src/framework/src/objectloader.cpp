@@ -68,10 +68,6 @@ void ObjectLoader::preprocessMesh(common::MyMesh& mesh) const
 {
   //modelToShow(mesh); TODOcheck
 
-  
-  core::DiscreteFairer df;
-  df.execute(mesh, 1, 1);
-
 }
 
 void aaaaa(common::MyMesh& mesh)

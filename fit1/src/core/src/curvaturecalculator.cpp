@@ -1,10 +1,12 @@
 #include "curvaturecalculator.h"
 
+#include "lsq-plane.hh"
+
 
 namespace core{
   size_t dcallnum = 0;
 
-  void CurvatureCalculator::tessellateSurface(const size_t resolution, DerResults Ss, std::string path) const
+  void CurvatureCalculator::tessellateSurface(const size_t resolution, DerResults Ss) const
         {
 
     #define uvBOUND 20
@@ -60,6 +62,23 @@ namespace core
     std::vector<CurvatureCalculator::SurfaceParam> CurvatureCalculator::InputPoints::calcUVs() const
     {
 
+     std::vector<SurfaceParam> result;
+
+     const auto uvs = LSQPlane::projectToBestFitPlane(P);
+
+     for(const auto& uv : uvs) {
+       result.push_back({uv[0], uv[1]});
+     }
+
+     return result;
+
+     
+
+
+
+
+      ////////////////////////////////////////////
+      /*
       
       std::vector<SurfaceParam> result;
 
@@ -70,8 +89,7 @@ namespace core
       //C-h i
       //C-g
 
-      return result;
-      
+      //return result;   
 
 
       
@@ -119,6 +137,7 @@ namespace core
         std::cout<<"Uvs end"<<std::endl;
 
         return retval;
+      */
     }
 
     CurvatureCalculator::InputPoints CurvatureCalculator::InputPoints::translatePoints() const
@@ -136,11 +155,7 @@ namespace core
 
     CurvatureCalculator::DerResults CurvatureCalculator::calcDer(const InputPoints &ipp) const
     {
-        std::cout<<"calcDer"<<std::endl;
         const auto uvs = ipp.calcUVs();
-        for(const auto& a : uvs) {
-	  std::cout<<"u and v: "<< a.u << " " <<a.v<<std::endl;
-        }
 
 
         const auto res_size = 5;
@@ -175,9 +190,8 @@ namespace core
             b = A.transpose() * (A * A.transpose()).inverse() * c;
         }
 
-	//tessellateSurface(100, {b.row(0), b.row(1), b.row(2), b.row(3), b.row(4)}, std::string("t1.obj"));
+	tessellateSurface(100, {b.row(0), b.row(1), b.row(2), b.row(3), b.row(4)});
 
-        std::cout<<"calcEnd"<<std::endl;
         return {b.row(0), b.row(1), b.row(2), b.row(3), b.row(4)};
     }
 
@@ -190,10 +204,16 @@ namespace core
 
     void CurvatureCalculator::calcCurvature(const InputPoints &ipp)
     {
-        const auto ip = ipp.translatePoints();
+	if (dcallnum == 10) {
+	  std::ofstream f("pont.obj");
+	  for ( auto& i : ipp.P) {
+	    f << "v "<<i[0]<<" "<<i[1]<<" "<<i[2]<<std::endl;
+	  }
+	}
+	const auto ip = ipp.translatePoints();
+
 
         const auto eq = calcDer(ip);
-        std::cout<<eq.Su<<" "<< eq.Sv<<" "<< eq.Suu<< " "<<eq.Suv << " "<< eq.Svv<<std::endl;
 
         fundamental_elements.E = eq.Su.norm() * eq.Su.norm();
         fundamental_elements.G = eq.Sv.norm() * eq.Sv.norm();
@@ -207,7 +227,7 @@ namespace core
 
     }
 
-    double CurvatureCalculator::getCurvature() const
+    double CurvatureCalculator::getMeanCurvature() const
     {
         const auto& fe = fundamental_elements;
         return (fe.L * fe.G - fe.M * fe.F + fe.N * fe.E - fe.M * fe.F) / (2 * fe.E * fe.G - fe.F * fe.F);
@@ -221,7 +241,7 @@ namespace core
 
     double CurvatureCalculator::getMaxPrincipleCurvature() const
     {
-        const auto main_curvature = getCurvature();
+        const auto main_curvature = getMeanCurvature();
         const auto gaussian_curvature = getGaussianCurvature();
         return 0; 
     }
@@ -237,56 +257,54 @@ namespace core
     c=-A
 */
 
-/*
-    void CurvatureCalculator::calcCurvatures(common::MyMesh &mesh) const
-    {
-
-
-        OpenMesh::VPropHandleT<double> doubleValues;
-        mesh.add_property(doubleValues, "doubleValues");
-
-        for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
-        {
-
-
-            mesh.property(doubleValues, vh) = calcCurvature(cip);
-        }
-
-        for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
-        {
-            common::MyMesh::VertexHandle vh = *v_it;
-            double doubleValue = mesh.property(doubleValues, vh);
-            //std::cout << "Vertex " << vh.idx() << ": Double Value = " << doubleValue << std::endl;
-        }
-    }
-*/
-
     void CurvatureCalculator::execute(common::MyMesh::VertexHandle &vh)
     {
-        std::cout<<"Call---------"<<std::endl;
         const common::MyMesh::Point& vertexPos = mesh.point(vh);
 
         InputPoints cip;
         cip.center = Eigen::Vector3d(vertexPos[0], vertexPos[1], vertexPos[2]);
-        std::cout<<cip.center<<std::endl;
-        std::cout<<"aaaaaa"<<std::endl;
-        for (common::MyMesh::VertexOHalfedgeIter voh_it = mesh.voh_iter(vh); voh_it.is_valid(); ++voh_it)
-        {
-            common::MyMesh::VertexHandle neighborVh = mesh.to_vertex_handle(*voh_it);
+	/*
+	for (auto neighborVh : mesh.vv_range(vh)) {
 
-            const auto neighborPos = mesh.point(neighborVh); // TODO ref?
+            const auto neighborPos = mesh.point(neighborVh);
 
             cip.P.emplace_back(neighborPos[0], neighborPos[1], neighborPos[2]);
         }
+	*/
 
-        std::cout<<"Inner"<<std::endl;
+	////////////////////
+	const size_t zone_size = 2;
+	std::set<common::MyMesh::VertexHandle> extended_neighborhood;
+	std::set<common::MyMesh::VertexHandle> extended_neighborhood2;
+
+
+	extended_neighborhood.insert(vh);
+	
+	for (size_t i = 0; i < zone_size; i++) {
+	  for (auto e2_neighborVh : extended_neighborhood) {
+	    for (auto e_neighborVh : mesh.vv_range(e2_neighborVh)) {
+	      extended_neighborhood2.insert(e_neighborVh);
+	    }	    
+	  }
+	  //for(const auto& tt : extended_neighborhood2) {
+	  //  extended_neighborhood.insert(tt);
+	  //}
+	  //extended_neighborhood2.clear();
+	  extended_neighborhood = extended_neighborhood2;
+	}
+
+	for (auto collected_neighbor : extended_neighborhood) {
+	  const auto collected_neighbor_pos = mesh.point(collected_neighbor);
+	  cip.P.emplace_back(collected_neighbor_pos[0], collected_neighbor_pos[1], collected_neighbor_pos[2]);
+	}
+	/////////////////////
+
         calcCurvature(cip);
-        std::cout<<"curvature: "<<getCurvature()<<std::endl;
+        std::cout<<"curvature: "<<getMeanCurvature()<<" at: "<<dcallnum<<std::endl;
     }
 
     void CurvatureCalculator::execute(const Eigen::Vector3d vertex_pos, const std::vector<Eigen::Vector3d>& neighbors)
     {
-      std::cout<<"Execute"<<std::endl;
       
         InputPoints cip;
         cip.center = Eigen::Vector3d(vertex_pos[0], vertex_pos[1], vertex_pos[2]);
@@ -312,63 +330,5 @@ namespace core
     CurvatureCalculator::CurvatureCalculator(common::MyMesh &mesh) : mesh(mesh)
     {
     }
-
-
-
-
-
-
-    /*
-        std::vector<Triangle3d> tessellateSurface(const size_t resolution, const DerResults &Ss)
-        {
-
-    #define uvBOUND 20
-
-            const double u_min = -uvBOUND;
-            const double u_max = uvBOUND;
-            const double v_min = -uvBOUND;
-            const double v_max = uvBOUND;
-
-            const double u_step_distance = (u_max - u_min) / resolution;
-            const double v_step_distance = (v_max - v_min) / resolution;
-
-            std::vector<Eigen::Vector3d> values;
-            for (size_t i = 0; i < resolution; i++)
-            {
-                const double u = u_min + i * u_step_distance;
-                for (size_t j = 0; j < resolution; j++)
-                {
-                    const double v = v_min + j * v_step_distance;
-                    values.push_back(S(u, v, Ss));
-                }
-            }
-
-            std::vector<Triangle3d> retval;
-
-            // TODO refactor
-
-            std::fstream fw("res1.obj", std::ios::out);
-
-            fw << "# Vertices\n";
-
-            for (const auto &vertex : values)
-            {
-                fw << "v " << vertex[0] << " " << vertex[1] << " " << vertex[2] << std::endl;
-            }
-
-            fw << "\n# Faces\n";
-
-            for (size_t i = 0; i < (resolution - 1) * (resolution - 1); i++)
-            {
-                const size_t left_right_index = std::floor(i / (resolution - 1)) + i;
-                retval.push_back({values[left_right_index], values[left_right_index + resolution], values[left_right_index + resolution + 1]});
-                retval.push_back({values[left_right_index], values[left_right_index + resolution + 1], values[left_right_index]}); // TODO check indices
-
-                fw << "f " << left_right_index + 1 << " " << left_right_index + resolution + 1 << " " << left_right_index + resolution + 2 << std::endl;
-                fw << "f " << left_right_index + 1 << " " << left_right_index + resolution + 2 << " " << left_right_index + 2 << std::endl;
-            }
-
-            return retval;
-        }
-    */
+       
 }

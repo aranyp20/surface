@@ -16,6 +16,11 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(ui->rollminus, &QPushButton::pressed, this, &MainWindow::rollMinus);
     QObject::connect(ui->highlightEdgesCheckBox, qOverload<int>(&QCheckBox::stateChanged), this, &MainWindow::setHighlightEdges);
 
+    QObject::connect(ui->subdivisionCountBox, qOverload<int>(&QSpinBox::valueChanged), this, &MainWindow::setDFSubdivisionCount);
+    QObject::connect(ui->iterationCountBox, qOverload<int>(&QSpinBox::valueChanged), this, &MainWindow::setDFIterationCount);
+    QObject::connect(ui->executeButton, &QPushButton::pressed, this, &MainWindow::performMethod);
+
+
 
     const auto file_options = object_loader.loadFileOptions();
 
@@ -82,6 +87,23 @@ void MainWindow::setHighlightEdges(int status)
 
 void MainWindow::changeLoadedModel(int index)
 {
-  ui->main_openGL_widget->setPrintable(object_loader.loadFromFile(index));
+  m_mesh = object_loader.loadFromFile(index);
+  ui->main_openGL_widget->setPrintable(m_mesh);
   ui->main_openGL_widget->update();
+}
+
+void MainWindow::performMethod()
+{
+  discrete_fairer.execute(*m_mesh, df_subdivision_count, df_iteration_count);
+  ui->main_openGL_widget->update();
+}
+
+void MainWindow::setDFSubdivisionCount(int n)
+{
+  df_subdivision_count = n;
+}
+
+void MainWindow::setDFIterationCount(int n)
+{
+  df_iteration_count = n;
 }

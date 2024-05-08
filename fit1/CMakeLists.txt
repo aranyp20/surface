@@ -56,6 +56,7 @@ src/core/src/curvaturecalculator.cpp
 src/framework/src/objectloader.cpp
 src/common/include/organize.hpp
 src/core/src/discretefairer.cpp
+dependencies/lsq-plane.cc
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -66,5 +67,14 @@ ${CMAKE_CURRENT_SOURCE_DIR}/src/common/include/
 ${CMAKE_CURRENT_SOURCE_DIR}/src/visualization/include/
 ${CMAKE_CURRENT_SOURCE_DIR}/src/framework/include
 )
+
+
+
+target_include_directories(${PROJECT_NAME} PUBLIC
+${CMAKE_CURRENT_SOURCE_DIR}/dependencies/
+)
+
+link_directories(dependencies)
+
 
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL Qt5::Widgets ${OPENMESH_LIBRARIES})

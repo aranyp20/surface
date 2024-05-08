@@ -234,20 +234,20 @@ void DiscreteFairer::execute(common::MyMesh& mesh, size_t face_split_count, size
   // Subdivide the base mesh
   // child_parents_map is filled
   for(size_t i = 0; i < face_split_count; i++) {
-    //subdivide(mesh);
-    //subdivide(mesh);
+    subdivide(mesh);
   }
 
-  for(size_t i = 0; i < 0 ; i++){
+  for(size_t i = 0; i < iteration_count ; i++){
     // Calculate the curvature for each vertex at the beginning of each iteration
     CurvatureCalculator mcc(mesh);
     //TODO range operator (smarthandle....)
     for(common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it){
       auto vh = *v_it;
       mcc.execute(vh);
-      const auto curvature = mcc.getCurvature();
+      const auto curvature = mcc.getMeanCurvature();
       vertex_curvature_map[vh] =  curvature;
     }
+    continue;
     // Calculate the new position of each new vertex
     std::vector<std::pair<common::MyMesh::VertexHandle, Eigen::Vector3d>> new_vertex_positions;
     for(common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it){
@@ -273,15 +273,9 @@ void DiscreteFairer::execute(common::MyMesh& mesh, size_t face_split_count, size
     OpenMesh::VPropHandleT<double> doubleValues;
     mesh.add_property(doubleValues, "doubleValues");
 
-    CurvatureCalculator cc(mesh); //TODO: only calculate it in the original vertices
-    for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
-    {
-        common::MyMesh::VertexHandle vh = *v_it;
+    for (auto vh : mesh.vertices()) {        
 
-        cc.execute(vh);
-        
-
-        mesh.property(doubleValues, vh) = cc.getCurvature();
+        mesh.property(doubleValues, vh) = vertex_curvature_map[vh];
     }
 
 }

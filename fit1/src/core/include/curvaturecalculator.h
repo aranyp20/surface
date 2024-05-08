@@ -46,7 +46,7 @@ namespace core
         
         
         //void calcCurvatures(common::MyMesh &mesh) const;
-      void tessellateSurface(const size_t resolution, DerResults Ss, std::string path) const;
+      void tessellateSurface(const size_t resolution, DerResults Ss) const;
 
 
     public:
@@ -64,7 +64,7 @@ namespace core
         FundamentalElements getFundamentalElements() const;
         Eigen::Vector3d getNormal() const;
       //TODO: rename to mean curvature 
-        double getCurvature() const;
+        double getMeanCurvature() const;
         double getGaussianCurvature() const;
         double getMaxPrincipleCurvature() const;
 
