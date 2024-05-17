@@ -50,15 +50,15 @@ namespace color {
 
 
 // average //
-    template<typename T>
-    T average(T arg1) {
-        return arg1;
-    }
 
-    template<typename T, typename... Args>
-    T average(T arg1, Args... args) {
-        return (arg1 + average(args...)) / (sizeof...(args) + 1);
+  inline Eigen::Vector3d average(const std::vector<Eigen::Vector3d>& v)
+  {
+    Eigen::Vector3d sum(0,0,0);
+    for(const auto u : v) {
+      sum+=u;
     }
+    return sum/v.size();
+  }
 ////////////
 
     inline Eigen::Vector3d toEigenV3(const OpenMesh::DefaultTraits::Point& from)

@@ -1,0 +1,5 @@
+/Users/peti/surface/fit1/CMakeFiles/a_fit1.dir
+/Users/peti/surface/fit1/CMakeFiles/edit_cache.dir
+/Users/peti/surface/fit1/CMakeFiles/rebuild_cache.dir
+/Users/peti/surface/fit1/CMakeFiles/a_fit1_autogen_timestamp_deps.dir
+/Users/peti/surface/fit1/CMakeFiles/a_fit1_autogen.dir

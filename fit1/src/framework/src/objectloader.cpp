@@ -2,10 +2,10 @@
 #include <iostream>
 #include <filesystem>
 
+#include "common_defines.h"
 #include "discretefairer.h"
 
 namespace framework {
-
 
 void ObjectLoader::modelToShow(common::MyMesh& mesh) const
 {
@@ -19,8 +19,6 @@ void ObjectLoader::modelToShow(common::MyMesh& mesh) const
   double min_x = std::numeric_limits<double>::max();
   double min_y = std::numeric_limits<double>::max();
   double min_z = std::numeric_limits<double>::max();
-
-
 
   for (common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
   {
@@ -38,7 +36,7 @@ void ObjectLoader::modelToShow(common::MyMesh& mesh) const
 
   Eigen::Matrix4d translate_to_origin = Eigen::Matrix4d::Identity();
   
-  const Eigen::Vector3d original_center(common::average(max_x, min_x), common::average(max_y, min_y), common::average(max_z, min_z));
+  const Eigen::Vector3d original_center((max_x + min_x)/2, (max_y + min_y)/2, (max_z + min_z)/2);
   translate_to_origin.block<3,1>(0,3) = -original_center;
 
   double normalize_scaler = 2 / std::max(max_x - min_x, std::max(max_y - min_y, max_z - min_z));
@@ -63,10 +61,10 @@ void ObjectLoader::modelToShow(common::MyMesh& mesh) const
 
 }
 
-
+  #include "curvaturecalculator.h"
 void ObjectLoader::preprocessMesh(common::MyMesh& mesh) const
 {
-  //modelToShow(mesh); TODOcheck
+  //modelToShow(mesh); //TODOcheck
 
 }
 
@@ -112,7 +110,7 @@ std::shared_ptr<common::MyMesh> ObjectLoader::loadFromFile(const std::string& pa
     std::vector<std::string> retval;
     
     for (const auto& entry : std::filesystem::directory_iterator("./")) {
-      if (entry.path().extension() == ".obj") {
+      if (entry.path().extension() == ".obj" || entry.path().extension() == ".stl") {
         std::cout << entry.path() << std::endl;
 	retval.push_back(entry.path());
       }

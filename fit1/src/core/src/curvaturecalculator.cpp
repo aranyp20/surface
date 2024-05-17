@@ -1,57 +1,60 @@
 #include "curvaturecalculator.h"
 
 #include "lsq-plane.hh"
+#include <regex>
 
 
 namespace core{
+  Eigen::Vector3d tmp_offset;
   size_t dcallnum = 0;
 
   void CurvatureCalculator::tessellateSurface(const size_t resolution, DerResults Ss) const
-        {
+  {
 
-    #define uvBOUND 20
+	  
+#define uvBOUND 2
 
-            const double u_min = -uvBOUND;
-            const double u_max = uvBOUND;
-            const double v_min = -uvBOUND;
-            const double v_max = uvBOUND;
+    const double u_min = -uvBOUND;
+    const double u_max = uvBOUND;
+    const double v_min = -uvBOUND;
+    const double v_max = uvBOUND;
 
-            const double u_step_distance = (u_max - u_min) / resolution;
-            const double v_step_distance = (v_max - v_min) / resolution;
+    const double u_step_distance = (u_max - u_min) / resolution;
+    const double v_step_distance = (v_max - v_min) / resolution;
 
-            std::vector<Eigen::Vector3d> values;
-            for (size_t i = 0; i < resolution; i++)
-            {
-                const double u = u_min + i * u_step_distance;
-                for (size_t j = 0; j < resolution; j++)
-                {
-                    const double v = v_min + j * v_step_distance;
-                    values.push_back(S(u, v, Ss));
-                }
-            }
+    std::vector<Eigen::Vector3d> values;
+    for (size_t i = 0; i < resolution; i++)
+      {
+	const double u = u_min + i * u_step_distance;
+	for (size_t j = 0; j < resolution; j++)
+	  {
+	    const double v = v_min + j * v_step_distance;
+	    values.push_back(S(u, v, Ss));
+	  }
+      }
 
-            // TODO refactor
+    // TODO refactor
 
-            std::fstream fw("tessellated-" + std::to_string(++dcallnum) + ".obj", std::ios::out);
+    std::fstream fw("tessellations/tessellated-" + std::to_string(++dcallnum) + ".obj", std::ios::out);
 
-            fw << "# Vertices\n";
+    fw << "# Vertices\n";
 
-            for (const auto &vertex : values)
-            {
-                fw << "v " << vertex[0] << " " << vertex[1] << " " << vertex[2] << std::endl;
-            }
+    for (const auto &vertex : values)
+      {
+	fw << "v " << vertex[0] << " " << vertex[1] << " " << vertex[2] << std::endl;
+      }
 
-            fw << "\n# Faces\n";
+    fw << "\n# Faces\n";
 
-            for (size_t i = 0; i < (resolution - 1) * (resolution - 1); i++)
-            {
-                const size_t left_right_index = std::floor(i / (resolution - 1)) + i;
+    for (size_t i = 0; i < (resolution - 1) * (resolution - 1); i++)
+      {
+	const size_t left_right_index = std::floor(i / (resolution - 1)) + i;
 
-                fw << "f " << left_right_index + 1 << " " << left_right_index + resolution + 1 << " " << left_right_index + resolution + 2 << std::endl;
-                fw << "f " << left_right_index + 1 << " " << left_right_index + resolution + 2 << " " << left_right_index + 2 << std::endl;
-            }
+	fw << "f " << left_right_index + 1 << " " << left_right_index + resolution + 1 << " " << left_right_index + resolution + 2 << std::endl;
+	fw << "f " << left_right_index + 1 << " " << left_right_index + resolution + 2 << " " << left_right_index + 2 << std::endl;
+      }
 
-        }
+  }
   
 }
 
@@ -61,7 +64,7 @@ namespace core
     // TODO before integrated: cps.P size check + origo center precondition
     std::vector<CurvatureCalculator::SurfaceParam> CurvatureCalculator::InputPoints::calcUVs() const
     {
-
+      /*
      std::vector<SurfaceParam> result;
 
      const auto uvs = LSQPlane::projectToBestFitPlane(P);
@@ -71,14 +74,14 @@ namespace core
      }
 
      return result;
-
+      */
      
 
 
 
 
       ////////////////////////////////////////////
-      /*
+      
       
       std::vector<SurfaceParam> result;
 
@@ -89,11 +92,11 @@ namespace core
       //C-h i
       //C-g
 
-      //return result;   
-
+      return result;   
 
       
-        std::cout<<"UVS  start"<<std::endl;
+      
+      
         std::vector<SurfaceParam> retval;
 
         // retval.push_back({0, 0});
@@ -103,13 +106,10 @@ namespace core
         for (size_t i = 0; i < P.size(); i++)
         {
             const auto &p_i = P[i];
-	    std::cout<<"@"<<p_i<<std::endl;
             const auto &p_i_next = i == P.size() - 1 ? P[0] : P[i + 1];
-	    std::cout<<p_i_next<<std::endl;
             const auto alpha = std::acos(p_i.normalized().dot(p_i_next.normalized()));
             alphas.push_back(alpha);
             alpha_sum += alpha;
-            std::cout<<"alpha: "<<alpha<<std::endl;
         }
 
         const auto alpha_normalizer = 2 * M_PI / alpha_sum;
@@ -117,8 +117,6 @@ namespace core
         {
             alpha *= alpha_normalizer;
         }
-	std::cout<<"alpha normalizer: "<<alpha_normalizer<<std::endl;
-
         for (size_t i = 0; i < P.size(); i++)
         {
             const auto h_i = P[i].norm();
@@ -130,18 +128,14 @@ namespace core
                     sum_a += alphas[j];
                 }
             }
-            std::cout<<"Sum_a: "<<sum_a<<std::endl;
-	    std::cout<<"h_i: "<<h_i<<std::endl;
             retval.push_back({h_i * std::cos(sum_a), h_i * std::sin(sum_a)});
         }
-        std::cout<<"Uvs end"<<std::endl;
-
         return retval;
-      */
     }
 
     CurvatureCalculator::InputPoints CurvatureCalculator::InputPoints::translatePoints() const
     {
+      tmp_offset=center;
         auto clone = *this;
 
         for (auto &cp : clone.P)
@@ -199,12 +193,12 @@ namespace core
     {
         const Eigen::Vector3d S00{0, 0, 0};
 
-        return S00 + u * Ss.Su + v * Ss.Sv + 0.5 * u * u * Ss.Suu + u * v * Ss.Suv + 0.5 * v * v * Ss.Svv;
+        return S00 + u * Ss.Su + v * Ss.Sv + 0.5 * u * u * Ss.Suu + u * v * Ss.Suv + 0.5 * v * v * Ss.Svv + tmp_offset;
     }
 
     void CurvatureCalculator::calcCurvature(const InputPoints &ipp)
     {
-	if (dcallnum == 10) {
+	if (dcallnum == 0) {
 	  std::ofstream f("pont.obj");
 	  for ( auto& i : ipp.P) {
 	    f << "v "<<i[0]<<" "<<i[1]<<" "<<i[2]<<std::endl;
@@ -215,8 +209,8 @@ namespace core
 
         const auto eq = calcDer(ip);
 
-        fundamental_elements.E = eq.Su.norm() * eq.Su.norm();
-        fundamental_elements.G = eq.Sv.norm() * eq.Sv.norm();
+        fundamental_elements.E = eq.Su.dot(eq.Su);
+        fundamental_elements.G = eq.Sv.dot(eq.Sv);
         fundamental_elements.F = eq.Su.dot(eq.Sv);
 
         normal = eq.Su.cross(eq.Sv).normalized();
@@ -230,7 +224,7 @@ namespace core
     double CurvatureCalculator::getMeanCurvature() const
     {
         const auto& fe = fundamental_elements;
-        return (fe.L * fe.G - fe.M * fe.F + fe.N * fe.E - fe.M * fe.F) / (2 * fe.E * fe.G - fe.F * fe.F);
+        return (fe.L * fe.G - fe.M * fe.F + fe.N * fe.E - fe.M * fe.F) / (2 * (fe.E * fe.G - fe.F * fe.F));
     }
 
     double CurvatureCalculator::getGaussianCurvature() const
@@ -263,17 +257,18 @@ namespace core
 
         InputPoints cip;
         cip.center = Eigen::Vector3d(vertexPos[0], vertexPos[1], vertexPos[2]);
-	/*
+	////////////
 	for (auto neighborVh : mesh.vv_range(vh)) {
 
             const auto neighborPos = mesh.point(neighborVh);
 
             cip.P.emplace_back(neighborPos[0], neighborPos[1], neighborPos[2]);
         }
-	*/
+	
 
 	////////////////////
-	const size_t zone_size = 2;
+	/*
+	const size_t zone_size = 1;
 	std::set<common::MyMesh::VertexHandle> extended_neighborhood;
 	std::set<common::MyMesh::VertexHandle> extended_neighborhood2;
 
@@ -293,14 +288,17 @@ namespace core
 	  extended_neighborhood = extended_neighborhood2;
 	}
 
+	extended_neighborhood.insert(vh);
+	
 	for (auto collected_neighbor : extended_neighborhood) {
 	  const auto collected_neighbor_pos = mesh.point(collected_neighbor);
 	  cip.P.emplace_back(collected_neighbor_pos[0], collected_neighbor_pos[1], collected_neighbor_pos[2]);
 	}
+	*/
 	/////////////////////
 
         calcCurvature(cip);
-        std::cout<<"curvature: "<<getMeanCurvature()<<" at: "<<dcallnum<<std::endl;
+        //std::cout<<"curvature: "<<getMeanCurvature()<<" at: "<<dcallnum<<std::endl;
     }
 
     void CurvatureCalculator::execute(const Eigen::Vector3d vertex_pos, const std::vector<Eigen::Vector3d>& neighbors)
