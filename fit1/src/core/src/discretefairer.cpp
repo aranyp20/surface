@@ -5,8 +5,10 @@
 #include "curvaturecalculator.h"
 #include "organize.hpp"
 #include <cstddef>
+#include <iostream>
 #include <map>
 #include <ostream>
+#include <stdexcept>
 #include <unordered_map>
 #include <optional>
 #include <utility>
@@ -17,12 +19,14 @@ namespace core {
   
   namespace {
 
-    struct ExtendedVertexInfo
+    typedef std::map<common::MyMesh::VertexHandle, std::array<common::MyMesh::VertexHandle,2>> ChildrenParents;
+
+    
+    struct ExtendedVertexStaticInfo
     {
-      bool isOriginalVertex = true;
+      bool is_original_vertex = true;
       std::vector<std::pair<common::MyMesh::VertexHandle, double>> weighed_effectors;
       CurvatureCalculator::FundamentalElements original_fundamental_elements;
-      
     };
 
     common::MyMesh::EdgeHandle findEdgeConnectingVertices(common::MyMesh& mesh, common::MyMesh::VertexHandle v1, common::MyMesh::VertexHandle v2) {
@@ -40,9 +44,6 @@ namespace core {
       // If no such edge found, return an invalid handle
       return common::MyMesh::EdgeHandle();
     } 
-
-
-    typedef std::map<common::MyMesh::VertexHandle, std::array<common::MyMesh::VertexHandle,2>> ChildrenParents;
 
   
     // Vertexhandle not present as child in this map must be original vertex
@@ -161,27 +162,18 @@ namespace core {
       return result;
     }
 
-
-    // TODO: optimize
-    bool isOriginalVertex(const common::MyMesh::VertexHandle& vh, const ChildrenParents& child_parents_map)
+    std::vector<std::pair<common::MyMesh::VertexHandle, double>> getWeighedEffectors(const common::MyMesh::VertexHandle& to, const ChildrenParents& child_parents_map,
+										     const common::MyMesh& mesh)
     {
-      return getEffectors(vh, child_parents_map).size() == 1;
-    }
-
-  
-    std::map<common::MyMesh::VertexHandle, double> vertex_curvature_map;
-
-
-    double calcTargetCurvature(const common::MyMesh::VertexHandle& iteratable, const common::MyMesh& mesh, const ChildrenParents& child_parents_map)
-    {     
-      const auto effectors = getEffectors(iteratable, child_parents_map);
+      std::vector<std::pair<common::MyMesh::VertexHandle, double>> retval;
+      const auto effectors = getEffectors(to, child_parents_map);
 
       if(effectors.size() == 2) {
 	std::vector<common::MyMesh::VertexHandle> t_effectors;
 	for(const auto& a : effectors) {
-	  t_effectors.push_back(a);
+	  t_effectors.push_back(a); //TODO delete this
 	}
-	const auto p0 = mesh.point(iteratable);
+	const auto p0 = mesh.point(to);
 	const auto p1 = mesh.point(t_effectors[0]);
 	const auto p2 = mesh.point(t_effectors[1]);
 	auto d1 = (p0 - p1).norm();
@@ -189,14 +181,15 @@ namespace core {
 	const auto normalizer = d2 + d1;
 	d1 = d1 / normalizer;
 	d2 = d2 / normalizer;
-	return vertex_curvature_map.at(t_effectors[0]) * d1 + vertex_curvature_map.at(t_effectors[1]) * d2;
+	retval.push_back({t_effectors[0], d1});//TODO refactor
+	retval.push_back({t_effectors[1], d2});
       }
       else if (effectors.size() == 3) {
 	std::vector<common::MyMesh::VertexHandle> t_effectors;
 	for(const auto& a : effectors) {
 	  t_effectors.push_back(a);
 	}
-	const auto p0 = mesh.point(iteratable);
+	const auto p0 = mesh.point(to);
 	const auto p1 = mesh.point(t_effectors[0]);
 	const auto p2 = mesh.point(t_effectors[1]);
 	const auto p3 = mesh.point(t_effectors[2]);
@@ -207,16 +200,32 @@ namespace core {
 	d1 = d1 / normalizer;
 	d2 = d2 / normalizer;
 	d3 = d3 / normalizer;
-	return vertex_curvature_map.at(t_effectors[0]) * d1 + vertex_curvature_map.at(t_effectors[1]) * d2 + vertex_curvature_map.at(t_effectors[2]) * d3;
-      }
-      else {
-	std::cout<<"Vertex iterate invalid effectors count."<<std::endl;
+	retval.push_back({t_effectors[0], d1});
+	retval.push_back({t_effectors[1], d2});
+	retval.push_back({t_effectors[2], d3});
       }
 
-      return 0;
+      return retval;
+    }
+
+  
+    std::map<common::MyMesh::VertexHandle, double> vertex_curvature_map;
+
+
+    double calcTargetCurvature(const std::vector<std::pair<common::MyMesh::VertexHandle, double>>& weighed_effectors)
+    {     
+      double H = 0.0;
+      for(const auto& weighed_effector : weighed_effectors) {
+	if (vertex_curvature_map.count(weighed_effector.first) < 1) {
+	  std::cout<<weighed_effector.first.idx()<<std::endl;
+	  throw std::runtime_error("Curvature in curvature map is not found.");
+	}
+	H += vertex_curvature_map.at(weighed_effector.first) * weighed_effector.second;
+      }
+      return H;
     }
   
-    Eigen::Vector3d iterateVertex(common::MyMesh& mesh, common::MyMesh::VertexHandle& iteratable, const ChildrenParents& child_parents_map)
+    Eigen::Vector3d iterateVertex(common::MyMesh& mesh, common::MyMesh::VertexHandle& iteratable, const ExtendedVertexStaticInfo& extended_vertex_static_info)
     {
 
       std::vector<common::MyMesh::VertexHandle> neighbors;
@@ -237,20 +246,40 @@ namespace core {
       CurvatureCalculator cc(mesh);
       cc.execute(iteratable);
       const auto normal = cc.getNormal();
-      const auto fe = cc.getFundamentalElements();
+      const auto fe = extended_vertex_static_info.original_fundamental_elements;
 
-      const auto H = calcTargetCurvature(iteratable, mesh, child_parents_map);
-
-      vertex_curvature_map[iteratable] = H;
+      const auto H = calcTargetCurvature(extended_vertex_static_info.weighed_effectors);
 
       const auto Qm = mesh.point(iteratable);
-      if(iteratable.idx()==146){
-	std::cout<<"HELLO!"<<std::endl;
-      }
       const Eigen::Vector3d Q(Qm[0], Qm[1], Qm[2]);
       
-      return DiscreteFairer::Q(e_neighbors, normal, 1.0, fe, Q, iteratable.idx()==146);
+      return DiscreteFairer::Q(e_neighbors, normal, H, fe, Q, iteratable.idx()==146);
   
+    }
+
+    std::map<common::MyMesh::VertexHandle, ExtendedVertexStaticInfo> generateExtendedVertexSaticInfos(common::MyMesh& mesh, const ChildrenParents& child_parents_map)
+    {
+      std::map<common::MyMesh::VertexHandle, ExtendedVertexStaticInfo> retval;
+
+      CurvatureCalculator cc(mesh);
+      
+      for (auto vh : mesh.vertices()) {
+
+	ExtendedVertexStaticInfo evsi;
+	const auto weighed_effectors = getWeighedEffectors(vh, child_parents_map, mesh);
+	evsi.is_original_vertex = weighed_effectors.size() < 2;
+
+	if (!evsi.is_original_vertex) {
+	  evsi.weighed_effectors = weighed_effectors;
+
+	  cc.execute(vh);
+	  evsi.original_fundamental_elements = cc.getFundamentalElements();
+	}
+
+	retval.insert({vh, evsi});
+      }
+      
+      return retval;
     }
 
   } // namespace
@@ -264,25 +293,36 @@ namespace core {
       subdivide(mesh, child_parents_map);
     }
 
+    const auto extended_vertex_static_infos = generateExtendedVertexSaticInfos(mesh, child_parents_map);
+
     for(size_t i = 0; i < iteration_count ; i++){
       // Calculate the curvature for each vertex at the beginning of each iteration
       CurvatureCalculator mcc(mesh);
+      
       //TODO range operator (smarthandle....)
       for(common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it){
 	auto vh = *v_it;
-	if(isOriginalVertex(vh, child_parents_map)){
+	if (extended_vertex_static_infos.count(vh) < 1) {
+	  std::cout<<"ExtendedVertexStaticInfo is invalid"<<std::endl;
+	  continue;
+	}
+	if(extended_vertex_static_infos.at(vh).is_original_vertex){
 	  mcc.execute(vh);
-	  const auto curvature = mcc.getMeanCurvature();
-	  vertex_curvature_map[vh] =  curvature;
-	  std::cout<<"Curvature: "<< curvature<<std::endl;
+	  vertex_curvature_map[vh] =  mcc.getMeanCurvature();
+	  //std::cout<<"Curvature: "<< curvature<<std::endl;
 	}
       }
+      
       // Calculate the new position of each new vertex
       std::vector<std::pair<common::MyMesh::VertexHandle, Eigen::Vector3d>> new_vertex_positions;
       for(common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it){
 	auto vh = *v_it;
-	if (!isOriginalVertex(vh, child_parents_map)) {
-	  new_vertex_positions.emplace_back(vh, iterateVertex(mesh, vh, child_parents_map));
+	if (extended_vertex_static_infos.count(vh) < 1) {
+	  std::cout<<"ExtendedVertexStaticInfo is invalid"<<std::endl;
+	  continue;
+	}
+	if (!extended_vertex_static_infos.at(vh).is_original_vertex) {
+	  new_vertex_positions.emplace_back(vh, iterateVertex(mesh, vh, extended_vertex_static_infos.at(vh)));
 	}
       }
       //continue;
@@ -302,22 +342,9 @@ namespace core {
 
     
 
-    OpenMesh::VPropHandleT<double> doubleValues;
-    mesh.add_property(doubleValues, "doubleValues");
-
-    for (auto vh : mesh.vertices()) {        
-
-      mesh.property(doubleValues, vh) = vertex_curvature_map[vh];
-    }
-    CurvatureCalculator cc_final(mesh);
-    for (auto vh : mesh.vertices()) {
-      cc_final.execute(vh);
-      if(vh.idx()==146){
-	std::cout<<"Haho!"<<std::endl;
-      }
-      std::cout<<"Final curvature: "<<cc_final.getMeanCurvature()<<std::endl;
-      mesh.property(doubleValues, vh) = cc_final.getMeanCurvature();
-    }
+    //OpenMesh::VPropHandleT<double> doubleValues;
+    //mesh.add_property(doubleValues, "doubleValues");
+    //mesh.property(doubleValues, vh) = vertex_curvature_map[vh];
 
   }
 

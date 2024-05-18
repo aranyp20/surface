@@ -1,1 +1,0 @@
-peti@dhcp-89.r.wlan.net.bme.hu.1197
