@@ -263,7 +263,7 @@ void Canvas::paintGL()
         q_m(i, j) = static_cast<float>(m(i, j));
       }
     }
-    setCurvaturToHueAttributes(*printable_mesh, 0.8);
+    setCurvaturToHueAttributes(*printable_mesh, 0.9);
     std::vector<qGlVertex> pp = printableMeshToTriangles();
 /*
     sp->bind();

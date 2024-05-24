@@ -1,6 +1,8 @@
 #include "curvaturecalculator.h"
 
 #include "lsq-plane.hh"
+#include <algorithm>
+#include <iterator>
 #include <regex>
 
 
@@ -208,17 +210,18 @@ namespace core
 
 
         const auto eq = calcDer(ip);
+	std::cout<<"SuSv: "<<eq.Su<<", "<<eq.Sv<<std::endl;
 
         fundamental_elements.E = eq.Su.dot(eq.Su);
         fundamental_elements.G = eq.Sv.dot(eq.Sv);
         fundamental_elements.F = eq.Su.dot(eq.Sv);
 
         normal = eq.Su.cross(eq.Sv).normalized();
+
         
         fundamental_elements.L = eq.Suu.dot(normal);
         fundamental_elements.M = eq.Suv.dot(normal);
         fundamental_elements.N = eq.Svv.dot(normal);
-
     }
 
     double CurvatureCalculator::getMeanCurvature() const
@@ -264,6 +267,9 @@ namespace core
 
             cip.P.emplace_back(neighborPos[0], neighborPos[1], neighborPos[2]);
         }
+
+	//TODO delete
+	//std::reverse(cip.P.begin(), cip.P.end());
 	
 
 	////////////////////
@@ -296,8 +302,9 @@ namespace core
 	}
 	*/
 	/////////////////////
-
-        calcCurvature(cip);
+	
+	calcCurvature(cip);
+	
         //std::cout<<"curvature: "<<getMeanCurvature()<<" at: "<<dcallnum<<std::endl;
     }
 
