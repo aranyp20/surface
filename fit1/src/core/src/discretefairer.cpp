@@ -286,11 +286,11 @@ namespace core {
     }
 
     const auto extended_vertex_static_infos = generateExtendedVertexSaticInfos(mesh, child_parents_map);
-    std::cout<<"DiscreteFairer: ExtendedVertexStaticInfos are generated."<<std::endl;
+    //std::cout<<"DiscreteFairer: ExtendedVertexStaticInfos are generated."<<std::endl;
 
     for(size_t i = 0; i < iteration_count ; i++){
       // Calculate the curvature for each vertex at the beginning of each iteration
-      CurvatureCalculator mcc(mesh);
+      CurvatureCalculator mcc(mesh, true);
       
       //TODO range operator (smarthandle....)
       for(common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it){
@@ -307,8 +307,8 @@ namespace core {
       for(common::MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it){
 	auto vh = *v_it;
 	if (!extended_vertex_static_infos.at(vh).is_original_vertex) {
-	  if(/*vh.idx()>=29 && vh.idx()<=3100*/ vh.idx()==31 || true){
-	  new_vertex_positions.emplace_back(vh, iterateVertex(mesh, vh, extended_vertex_static_infos.at(vh)));
+	  if(/*vh.idx()>=29 && vh.idx()<=3100*/ vh.idx()==0 || true){
+	    new_vertex_positions.emplace_back(vh, iterateVertex(mesh, vh, extended_vertex_static_infos.at(vh)));
 	  }
 	}
       }
@@ -323,11 +323,10 @@ namespace core {
 	  mesh.point(vertex_with_new_pos.first) = new_pos;
       }
 
-      std::cout<<"DiscreteFairer: Ietration["<<i+1<<"] finished."<<std::endl;
+      //std::cout<<"DiscreteFairer: Ietration["<<i+1<<"] finished."<<std::endl;
     }
 
     OpenMesh::IO::write_mesh(mesh, "result.obj");
-
 
     OpenMesh::VPropHandleT<double> doubleValues;
     mesh.add_property(doubleValues, "doubleValues");
@@ -335,8 +334,8 @@ namespace core {
       if(vh.idx()==31 || true){
 	CurvatureCalculator cc(mesh);
 	cc.execute(vh);
-	std::cout<<"curv: "<<cc.getMeanCurvature()<<std::endl;
-	std::cout<<cc.getNormal()<<std::endl;
+	//std::cout<<"curv: "<<cc.getMeanCurvature()<<std::endl;
+	//std::cout<<cc.getNormal()<<std::endl;
 	mesh.property(doubleValues, vh) = cc.getMeanCurvature();
       }
     }

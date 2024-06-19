@@ -214,12 +214,12 @@ std::vector<Canvas::qGlVertex> Canvas::printableMeshToTriangles() const
           OpenMesh::VPropHandleT<double> myprop;
           if(printable_mesh->get_property_handle(myprop, "doubleValues")){
             color = printable_mesh->property(myprop, vh);
-            has_curvature = true;
+	    //           has_curvature = true;
           }
 	 
 
           
-          const auto rgb_curvature = has_curvature ? common::color::hsvToRgb({color / hue_divider + hue_offset, 1.0, 1.0}) : Eigen::Vector3d(0.0, 0.0, 0.0);
+          const auto rgb_curvature = has_curvature ? common::color::hsvToRgb({color / hue_divider + hue_offset, 1.0, 1.0}) : Eigen::Vector3d(1.0, 0.0, 0.0);
 
 
           retval.push_back({{vertex_position[0], vertex_position[1], vertex_position[2]}, {static_cast<float>(rgb_curvature[0]), static_cast<float>(rgb_curvature[1]), static_cast<float>(rgb_curvature[2])}});
@@ -319,7 +319,7 @@ void Canvas::paintGL()
 	Eigen::Vector4d c_pos = p*v*m *  Eigen::Vector4d(line.position[0], line.position[1], line.position[2], 1.0);
 	c_pos = c_pos/ c_pos[3];
 	glColor3f(1.0, 1.0, 1.0);
-	glVertex3f(c_pos[0], c_pos[1], c_pos[2] - 0.01f);
+	glVertex3f(c_pos[0], c_pos[1], c_pos[2] - 0.0001f);
       }
       glEnd();
     }

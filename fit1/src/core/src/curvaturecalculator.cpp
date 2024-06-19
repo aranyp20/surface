@@ -1,5 +1,6 @@
 #include "curvaturecalculator.h"
 
+#include "common_defines.h"
 #include "lsq-plane.hh"
 #include <algorithm>
 #include <iterator>
@@ -64,7 +65,7 @@ namespace core
 {
   
     // TODO before integrated: cps.P size check + origo center precondition
-    std::vector<CurvatureCalculator::SurfaceParam> CurvatureCalculator::InputPoints::calcUVs() const
+    std::vector<CurvatureCalculator::SurfaceParam> CurvatureCalculator::InputPoints::calcUVs(bool use_adaptive_uvs) const
     {
       /*
      std::vector<SurfaceParam> result;
@@ -84,18 +85,19 @@ namespace core
 
       ////////////////////////////////////////////
       
-      
-      std::vector<SurfaceParam> result;
+      if (!use_adaptive_uvs) {
+	std::vector<SurfaceParam> result;
 
-      for(size_t i=0; i< P.size(); i++) {
-	const auto tt = 2 * M_PI * (static_cast<double>(i)/P.size());
-	result.push_back({std::cos(tt), std::sin(tt)});
+	for(size_t i=0; i< P.size(); i++) {
+	  const auto tt = 2 * M_PI * (static_cast<double>(i)/P.size());
+	  result.push_back({std::cos(tt), std::sin(tt)});
+	}
+	//C-h i
+	//C-g
+
+	return result;   
+
       }
-      //C-h i
-      //C-g
-
-      return result;   
-
       
       
       
@@ -151,7 +153,7 @@ namespace core
 
     CurvatureCalculator::DerResults CurvatureCalculator::calcDer(const InputPoints &ipp) const
     {
-        const auto uvs = ipp.calcUVs();
+        const auto uvs = ipp.calcUVs(use_adaptive_uvs);
 
 
         const auto res_size = 5;
@@ -205,12 +207,13 @@ namespace core
 	  for ( auto& i : ipp.P) {
 	    f << "v "<<i[0]<<" "<<i[1]<<" "<<i[2]<<std::endl;
 	  }
+	   f << "v "<<ipp.center[0]<<" "<<ipp.center[1]<<" "<<ipp.center[2]<<std::endl;
 	}
 	const auto ip = ipp.translatePoints();
 
 
         const auto eq = calcDer(ip);
-	std::cout<<"SuSv: "<<eq.Su<<", "<<eq.Sv<<std::endl;
+	//std::cout<<"SuSv: "<<eq.Su<<", "<<eq.Sv<<std::endl;
 
         fundamental_elements.E = eq.Su.dot(eq.Su);
         fundamental_elements.G = eq.Sv.dot(eq.Sv);
@@ -332,7 +335,7 @@ namespace core
         return normal;
     }
 
-    CurvatureCalculator::CurvatureCalculator(common::MyMesh &mesh) : mesh(mesh)
+  CurvatureCalculator::CurvatureCalculator(common::MyMesh &mesh, bool _use_adaptive_uvs) : mesh(mesh), use_adaptive_uvs(_use_adaptive_uvs)
     {
     }
        

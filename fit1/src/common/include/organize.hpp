@@ -10,6 +10,9 @@ namespace common {
 namespace color {
 
 
+
+  
+
     inline Eigen::Vector3d hsvToRgb(const Eigen::Vector3d& hsv)
     {
         const auto& h = hsv[0];

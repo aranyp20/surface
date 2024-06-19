@@ -28,7 +28,7 @@ namespace core
 
             InputPoints translatePoints() const;
 
-            std::vector<SurfaceParam> calcUVs() const;
+            std::vector<SurfaceParam> calcUVs(bool use_adaptive_uvs) const;
         };
 
         struct DerResults
@@ -73,13 +73,15 @@ namespace core
         void execute(const Eigen::Vector3d vertex_pos, const std::vector<Eigen::Vector3d>& neighbors);
 
 
-        CurvatureCalculator(common::MyMesh &mesh);
+      CurvatureCalculator(common::MyMesh &mesh, bool _use_adaptive_uvs = false);
     private:
 
         common::MyMesh& mesh;
 
         FundamentalElements fundamental_elements;
         Eigen::Vector3d normal;
+
+      bool use_adaptive_uvs = false;
     };
 
 }
